@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #define MAX_SNAPSHOTS 1000
 #define MAX_OUTPUT 10
@@ -36,7 +37,6 @@ const int SWITCHES_M[NUM_SWITCHES_M] = {
   MIDDLE_L,
   MIDDLE_H
 };
-
 const int SWITCHES_R[NUM_SWITCHES_R] = {
   RING_L,
   RING_H
@@ -47,6 +47,16 @@ const int SWITCHES_P[NUM_SWITCHES_P] = {
 };
 
 /** END **/
+
+
+/** LAYOUT **/
+char *layoutString()
+{
+  return 
+    "0020 space\n"
+    "0001 e\n"
+  ;
+}
 
 
 
@@ -76,12 +86,18 @@ typedef struct {
 } Output;
 
 typedef struct {
+  int ids[LAYOUT_SIZE];
+  Snapshot *chords[LAYOUT_SIZE];
+  Output   *outputs[LAYOUT_SIZE];
+} Layout;
+
+typedef struct {
 	SwitchHistory *history;
 	Output *outputM;
 } ClockReturn;
 
 
-Key **LAYOUT[LAYOUT_SIZE]; // treat as constant once created
+Layout LAYOUT; // treat as constant once created
 
 // REMOVE for use in Teensyduino
 int digitalRead(int x);
@@ -113,19 +129,24 @@ boole historyTooLong (const SwitchHistory *h);
 
 int chordId (const Snapshot *s);
 
-Snapshot *chordFromM  (const SwitchHistory *h);
-Output   *outputForMA (const Snapshot *sM, const SwitchHistory *h);
+Snapshot *chordFromM (const SwitchHistory *h);
+Output   *outputForM (const Snapshot *sM, const SwitchHistory *h);
 
 
 SwitchHistory *restartHistoryD (SwitchHistory *h);
-SwitchHistory *addToHistory   (Snapshot *sM, SwitchHistory *h);
+SwitchHistory *addToHistory    (Snapshot *sM, SwitchHistory *h);
 
 ClockReturn clockReturn (SwitchHistory *history, Output *output);
-ClockReturn clockA      (Snapshot *currentM, SwitchHistory *history);
+ClockReturn clock       (Snapshot *currentM, SwitchHistory *history);
 
 Snapshot *readInputsAIO ();
 void      sendKeyIO     (const Key *k);
 void      sendOutputIO  (const Output *oM);
+
+void      loadLayoutA        (char *str);
+Snapshot *stringToSnapshotMA (const char *str);
+Output   *stringToOutputMA   (const char *str);
+void      addToLayoutA       (Snapshot *s, Output *o, const int count);
 
 
 
@@ -289,16 +310,28 @@ int chordId(const Snapshot *s)
 	return s->index + 2*s->middle + 4*s->ring + 8*s->pinky;
 }
 
-// +1 Output M
-Output *outputForMA(const Snapshot *sM, const SwitchHistory *h)
+int chordIndex(const Snapshot *s)
+{
+  const int id = chordId(s);
+  int i;
+
+  for (i = 0; i < LAYOUT_SIZE; ++i) {
+    if (id == LAYOUT.ids[i]) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+Output *outputForM(const Snapshot *sM, const SwitchHistory *h)
 {
 	if (NULL != sM && isRelease(sM)) {
 		Output *o;
 		Snapshot *chordM = chordFromM(h);
 
 		if (NULL != chordM) {
-			o = newOutputA();
-			o->keys = LAYOUT[chordId(chordM)];
+			o = LAYOUT.outputs[chordIndex(chordM)];
     } else {
       o = NULL;
     }
@@ -319,14 +352,13 @@ ClockReturn clockReturn(SwitchHistory *history, Output *outputM)
 	return cr;
 }
 
-// +1 Output M
-ClockReturn clockA(Snapshot *currentM, SwitchHistory *history)
+ClockReturn clock(Snapshot *currentM, SwitchHistory *history)
 {
 	SwitchHistory *new_h;
 	Output *oM;
 
 	new_h = addToHistory(currentM, history);
-	oM    = outputForMA(currentM, new_h);
+	oM    = outputForM(currentM, new_h);
 
 	return clockReturn(new_h, oM);
 }
@@ -339,16 +371,16 @@ Snapshot *readInputsAIO()
   FingerState index = 0, middle = 0, ring = 0, pinky = 0;
 
   for (i = 0; i < NUM_SWITCHES_I; ++i) {
-    index  = index  << 1 + digitalRead(SWITCHES_I[i]);
+    index  = index *2 + digitalRead(SWITCHES_I[i]);
   }
   for (i = 0; i < NUM_SWITCHES_M; ++i) {
-    middle = middle << 1 + digitalRead(SWITCHES_M[i]);
+    middle = middle*2 + digitalRead(SWITCHES_M[i]);
   }
   for (i = 0; i < NUM_SWITCHES_R; ++i) {
-    ring   = ring   << 1 + digitalRead(SWITCHES_R[i]);
+    ring   = ring  *2 + digitalRead(SWITCHES_R[i]);
   }
   for (i = 0; i < NUM_SWITCHES_P; ++i) {
-    pinky  = pinky  << 1 + digitalRead(SWITCHES_P[i]);
+    pinky  = pinky *2 + digitalRead(SWITCHES_P[i]);
   }
 
   return newSnapshotA(index, middle, ring, pinky);
@@ -386,7 +418,65 @@ void sendKeyIO(const Key *k)
 }
 
 
+void loadLayoutA(char *str)
+{
+  char *chordstrM, *textM;
+  Snapshot *chordM;
+  Output *oM;
 
+  int count = 0;
+
+  char *lineM;
+  *lineM = strtok(str, "\n");
+
+  while (NULL != lineM) {
+
+    chordstrM = MALLOCS(char, 4); // +1 String
+    textM     = MALLOCS(char, 9); // +1 String
+
+    sscanf(lineM, "%s %s", chordstrM, textM);
+
+    if (NULL != chordstrM && NULL != textM) {
+
+      // these 2 live in LAYOUT for duration of program
+      chordM = stringToSnapshotMA(chordstrM); // +1 Snapshot M
+      oM     = stringToOutputMA(textM); // +1 Output M
+
+      if (NULL != chordM && NULL != oM) {
+        addToLayoutA(chordM, oM, count);
+      }
+
+      *lineM = strtok(NULL, "\n");
+      ++count;
+    }
+
+    free(chordstrM); // -1 String
+    free(textM); // -1 String
+  }
+
+  free(lineM); // -1 String
+}
+
+/* REQUIREMENT: str must be at least 4 chars long */
+Snapshot *stringToSnapshotMA(const char *str)
+{
+  int i;
+
+  for (i = 0; i < 4; ++i) {
+    
+  }
+}
+
+Output *stringToOutputMA(const char *str)
+{
+}
+
+void addToLayoutA(Snapshot *s, Output *o, const int count)
+{
+  LAYOUT.chords[count]  = s;
+  LAYOUT.ids[count]     = chordId(s);
+  LAYOUT.outputs[count] = o;
+}
 
 
 /***** MAIN PROCESSES BELOW HERE *****/
@@ -406,7 +496,7 @@ void loop() {
   SwitchHistory * h = history_GLOBAL;
 
   // call the pure function
-	ClockReturn r = clockA(current, h); // + 1 Output
+	ClockReturn r = clock(current, h); // + 1 Output
 
 	sendOutputIO(r.outputM);
 
