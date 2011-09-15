@@ -51,8 +51,12 @@ const int SWITCHES_P[NUM_SWITCHES_P] = {
 
 
 typedef short int boole;
-typedef int Key;
 typedef int FingerState;
+
+typedef struct {
+  int modifier;
+  int key;
+} Key;
 
 typedef struct {
 	FingerState index;
@@ -67,7 +71,8 @@ typedef struct {
 } SwitchHistory;
 
 typedef struct {
-	Key *keys;
+	Key **keys;
+  int count;
 } Output;
 
 typedef struct {
@@ -76,7 +81,7 @@ typedef struct {
 } ClockReturn;
 
 
-Key *LAYOUT[LAYOUT_SIZE]; // treat as constant once created
+Key **LAYOUT[LAYOUT_SIZE]; // treat as constant once created
 
 // REMOVE for use in Teensyduino
 int digitalRead(int x);
@@ -88,16 +93,18 @@ int digitalRead(int x) {
 void handleOutOfMemory();
 void *myalloc(int size);
 
+Key           *newKey       (const int key, const int modifier);
 Snapshot      *newSnapshotA (const FingerState i,
                              const FingerState m,
                              const FingerState r,
                              const FingerState p);
 SwitchHistory *newHistoryA ();
-Output        *newOutputA ();
+Output        *newOutputA  ();
 
-void deleteSnapshotD (Snapshot *s);
-void deleteHistoryD (SwitchHistory *h);
-void deleteOutputD (Output *o);
+void deleteSnapshotD          (Snapshot *sM);
+void deleteHistoryD           (SwitchHistory *hM);
+void deleteOutputD            (Output *oM);
+void discardHistorySnapshotsD (SwitchHistory *hM);
 
 
 boole historyIsEmpty (const SwitchHistory *h);
@@ -110,13 +117,14 @@ Snapshot *chordFromM  (const SwitchHistory *h);
 Output   *outputForMA (const Snapshot *sM, const SwitchHistory *h);
 
 
-SwitchHistory *restartHistory (SwitchHistory *h);
+SwitchHistory *restartHistoryD (SwitchHistory *h);
 SwitchHistory *addToHistory   (Snapshot *sM, SwitchHistory *h);
 
 ClockReturn clockReturn (SwitchHistory *history, Output *output);
 ClockReturn clockA      (Snapshot *currentM, SwitchHistory *history);
 
 Snapshot *readInputsAIO ();
+void      sendKeyIO     (const Key *k);
 void      sendOutputIO  (const Output *oM);
 
 
@@ -137,6 +145,18 @@ void *myalloc(int size)
 	return x;
 }
 
+
+// Never deleted - these live in LAYOUT for duration of program
+Key *newKey(const int key, const int modifier)
+{
+  Key *k = MALLOC(Key);
+
+  k->modifier = modifier;
+  k->key      = key;
+
+  return k;
+}
+
 Snapshot *newSnapshotA(const FingerState i, const FingerState m, const FingerState r, const FingerState p)
 {
 	Snapshot *s = MALLOC(Snapshot);
@@ -149,9 +169,11 @@ Snapshot *newSnapshotA(const FingerState i, const FingerState m, const FingerSta
 	return s;
 }
 
-void deleteSnapshotD(Snapshot *s)
+void deleteSnapshotD(Snapshot *sM)
 {
-  free(s);
+  if (NULL != sM) {
+    free(sM);
+  }
 }
 
 SwitchHistory *newHistoryA()
@@ -164,29 +186,44 @@ SwitchHistory *newHistoryA()
 	return h;
 }
 
-void deleteHistoryD(SwitchHistory *h)
+void deleteHistoryD(SwitchHistory *hM)
+{
+  if (NULL != hM) {
+    int i;
+
+    discardHistorySnapshotsD(hM);
+
+    free(hM->snapshots);
+    free(hM);
+  }
+}
+
+// -N Snapshots
+void discardHistorySnapshotsD(SwitchHistory *h)
 {
   int i;
 
   for (i = 0; i < MAX_SNAPSHOTS; ++i) {
     free(h->snapshots[i]);
   }
-  free(h->snapshots);
-  free(h);
 }
 
 Output *newOutputA()
 {
 	Output *o = MALLOC(Output);
-	o->keys   = MALLOCS(Key,MAX_OUTPUT); //(Key *) malloc(MAX_OUTPUT * sizeof(Key));
+	o->keys   = MALLOCS(Key *,MAX_OUTPUT);
 
 	return o;
 }
 
-void deleteOutputD(Output *o)
+void deleteOutputD(Output *oM)
 {
-  free(o->keys);
-  free(o);
+  if (NULL != oM) {
+    int i;
+
+    free(oM->keys); // individual keys live in LAYOUT, so are never freed
+    free(oM);
+  }
 }
 
 
@@ -216,10 +253,13 @@ Snapshot *chordFromM(const SwitchHistory *h)
 }
 
 
+// -N Snapshots
 // CHANGES h
-SwitchHistory *restartHistory(SwitchHistory *h)
+SwitchHistory *restartHistoryD(SwitchHistory *h)
 {
 	h->place = 0;
+  discardHistorySnapshotsD(h);
+
 	return h;
 }
 
@@ -230,11 +270,11 @@ SwitchHistory *addToHistory(Snapshot *sM, SwitchHistory *h)
 		if (historyTooLong(h)) {
 			Snapshot *s0M = chordFromM(h);
 
-			restartHistory(h);
+			restartHistoryD(h);
 			addToHistory(s0M, h);
 			addToHistory(sM, h);
 		} else if (isRelease(sM)) {
-			restartHistory(h);
+			restartHistoryD(h);
 		} else {
 			h->snapshots[h->place] = sM;
 			h->place++;
@@ -249,31 +289,37 @@ int chordId(const Snapshot *s)
 	return s->index + 2*s->middle + 4*s->ring + 8*s->pinky;
 }
 
+// +1 Output M
 Output *outputForMA(const Snapshot *sM, const SwitchHistory *h)
 {
 	if (NULL != sM && isRelease(sM)) {
+		Output *o;
 		Snapshot *chordM = chordFromM(h);
 
 		if (NULL != chordM) {
-			Output *o = newOutputA();
+			o = newOutputA();
 			o->keys = LAYOUT[chordId(chordM)];
+    } else {
+      o = NULL;
+    }
 
-			return o;
-		} else {
-			return NULL;
-		}
+    deleteSnapshotD(chordM);
+
+    return o;
+
 	} else {
 		return NULL;
 	}
 }
 
-ClockReturn clockReturn(SwitchHistory *history, Output *output)
+ClockReturn clockReturn(SwitchHistory *history, Output *outputM)
 {
-	ClockReturn cr = {history, output};
+	ClockReturn cr = {history, outputM};
 
 	return cr;
 }
 
+// +1 Output M
 ClockReturn clockA(Snapshot *currentM, SwitchHistory *history)
 {
 	SwitchHistory *new_h;
@@ -286,6 +332,7 @@ ClockReturn clockA(Snapshot *currentM, SwitchHistory *history)
 }
 
 
+// +1 Snapshot
 Snapshot *readInputsAIO()
 {
   int i, multiplier;
@@ -310,8 +357,32 @@ Snapshot *readInputsAIO()
 void sendOutputIO(const Output *oM)
 {
 	if (NULL != oM) {
-		// TODO
+    int i;
+
+    for (i = 0; i < oM->count; ++i) {
+      sendKeyIO(oM->keys[i]);
+    }
 	}
+}
+
+// TODO: uncomment Keyboard lines in Teensyduino
+void sendKeyIO(const Key *k)
+{
+  if (k->modifier != 0) {
+    // Keyboard.set_modifier(k->modifier);
+  }
+  if (k->key != 0) {
+    // Keyboard.set_key1(k->key);
+  }
+
+  if (k->key != 0 || k->modifier != 0) {
+    // press the key
+    // Keyboard.send_now();
+
+    // release the key
+    // Keyboard.set_key1(0);
+    // Keyboard.send_now();
+  }
 }
 
 
@@ -330,15 +401,20 @@ void setup() {
 }
 
 void loop() {
-	ClockReturn r = clockA(readInputsAIO(), history_GLOBAL);
+  // get function input
+  Snapshot *current = readInputsAIO(); // +1 Snapshot - deleted in restartHistoryD
+  SwitchHistory * h = history_GLOBAL;
+
+  // call the pure function
+	ClockReturn r = clockA(current, h); // + 1 Output
 
 	sendOutputIO(r.outputM);
 
-  // set for next loop
+  // set function output
 	history_GLOBAL = r.history;
 
-  // cleanup memory
-  deleteHistoryD(r.history);
+  // cleanup
+  deleteOutputD(r.outputM); // -1 Output
 }
 
 
