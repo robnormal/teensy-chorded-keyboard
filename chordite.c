@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #define MAX_SNAPSHOTS 1000
 #define MAX_OUTPUT 10
@@ -98,6 +99,14 @@ int digitalRead(int x);
 int digitalRead(int x) {
   return 0;
 }
+#define MODIFIERKEY_CTRL 1
+#define MODIFIERKEY_SHIFT 2
+#define MODIFIERKEY_ALT 3
+#define MODIFIERKEY_GUI 4
+#define KEY_ENTER 2
+#define KEY_SPACE 3
+#define KEY_ESC 4
+#define KEY_BKSP 5
 
 int ctoi(const char c);
 
@@ -127,6 +136,7 @@ Output   *outputForM (const Snapshot sM, const SwitchHistory *h);
 
 SwitchHistory *restartHistoryD (SwitchHistory *h, int starting_at);
 SwitchHistory *addToHistory    (Snapshot sM, SwitchHistory *h);
+Output        *addToOutput     (Key *k, Output *o);
 
 ClockReturn *clockReturn (SwitchHistory *history, Output *output);
 ClockReturn *clock       (Snapshot currentM, SwitchHistory *history);
@@ -306,6 +316,17 @@ SwitchHistory *addToHistory(Snapshot sM, SwitchHistory *h)
 	return h;
 }
 
+// Silently does nothing if o is already at max size
+Output *addToOutput(Key *k, Output *o)
+{
+  if (o->count < MAX_OUTPUT) {
+    o->keys[o->count] = k;
+    o->count++;
+  }
+
+  return o;
+}
+
 int chordId(const Snapshot s)
 {
   int i, id = 0;
@@ -438,7 +459,7 @@ void loadLayoutA(char *str, Snapshot (*toChordMA)(const char *str))
   int count = 0;
 
   char *lineM;
-  *lineM = strtok(str, "\n");
+  lineM = strtok(str, "\n");
 
   while (NULL != lineM) {
 
@@ -457,7 +478,7 @@ void loadLayoutA(char *str, Snapshot (*toChordMA)(const char *str))
         addToLayoutA(chordM, oM, count);
       }
 
-      *lineM = strtok(NULL, "\n");
+      lineM = strtok(NULL, "\n");
       ++count;
     }
 
@@ -488,8 +509,39 @@ int ctoi(const char c)
   return c - '0';
 }
 
+// +1 Key
+// +1 Output
 Output *stringToOutputMA(const char *str)
 {
+  Key *k;
+
+  if (strlen(str) == 1) {
+    k = newKey(str[0], 0);
+  } else if (strcmp(str, "control") == 0) {
+    k = newKey(0, MODIFIERKEY_CTRL);
+  } else if (strcmp(str, "shift") == 0) {
+    k = newKey(0, MODIFIERKEY_SHIFT);
+  } else if (strcmp(str, "alt") == 0) {
+    k = newKey(0, MODIFIERKEY_ALT);
+  } else if (strcmp(str, "win") == 0) {
+    k = newKey(0, MODIFIERKEY_GUI);
+  } else if (strcmp(str, "return") == 0) {
+    k = newKey(KEY_ENTER, 0);
+  } else if (strcmp(str, "space") == 0) {
+    k = newKey(KEY_SPACE, 0);
+  } else if (strcmp(str, "backspace") == 0) {
+    k = newKey(KEY_BKSP, 0);
+  } else if (strcmp(str, "esc") == 0) {
+    k = newKey(KEY_ESC, 0);
+  } else {
+    // no output
+    return NULL;
+  }
+
+  Output *o = newOutputA();
+  addToOutput(k, o);
+
+  return o;
 }
 
 void addToLayoutA(Snapshot s, Output *o, const int count)
