@@ -7,10 +7,22 @@
 #define MALLOCS(t,s) (t *) myalloc(s * sizeof(t))
 #define MALLOC(t) (t *) myalloc(sizeof(t))
 
+// add 1 to x's refs and return x
+#define ref(x) (x->refs++ ? x : x)
+
+#define INDEX 0
+#define MIDDLE 1
+#define RING 2
+#define PINKY 3
+#define THUMB 4
+
+#define TRUE 1
+#define FALSE 0
 
 /** KEYBOARD-SPECIFIC CONFIGURATION **/
 
 #define LAYOUT_SIZE 50
+#define NUM_FINGERS 4
 
 #define PINKY_L 0
 #define PINKY_H 1
@@ -24,27 +36,14 @@
 #define UP LOW
 #define DOWN HIGH
 
-#define NUM_SWITCHES_I 2
-#define NUM_SWITCHES_M 2
-#define NUM_SWITCHES_R 2
-#define NUM_SWITCHES_P 2
+const int SWITCHES[NUM_FINGERS][2] = {
+  { INDEX_L,  INDEX_H  }, 
+  { MIDDLE_L, MIDDLE_H },
+  { RING_L,   RING_H   },
+  { PINKY_L,  PINKY_H  }
+};
 
-const int SWITCHES_I[NUM_SWITCHES_I] = {
-  INDEX_L,
-  INDEX_H
-};
-const int SWITCHES_M[NUM_SWITCHES_M] = {
-  MIDDLE_L,
-  MIDDLE_H
-};
-const int SWITCHES_R[NUM_SWITCHES_R] = {
-  RING_L,
-  RING_H
-};
-const int SWITCHES_P[NUM_SWITCHES_P] = {
-  PINKY_L,
-  PINKY_H
-};
+const int NUM_SWITCHES[NUM_FINGERS] = {2, 2, 2, 2};
 
 /** END **/
 
@@ -62,6 +61,7 @@ char *layoutString()
 
 typedef short int boole;
 typedef int FingerState;
+typedef FingerState * Snapshot;
 
 typedef struct {
   int modifier;
@@ -69,14 +69,7 @@ typedef struct {
 } Key;
 
 typedef struct {
-	FingerState index;
-	FingerState middle;
-	FingerState ring;
-	FingerState pinky;
-} Snapshot;
-
-typedef struct {
-	Snapshot **snapshots;
+	Snapshot *snapshots;
 	int place;
 } SwitchHistory;
 
@@ -87,7 +80,7 @@ typedef struct {
 
 typedef struct {
   int ids[LAYOUT_SIZE];
-  Snapshot *chords[LAYOUT_SIZE];
+  Snapshot chords[LAYOUT_SIZE];
   Output   *outputs[LAYOUT_SIZE];
 } Layout;
 
@@ -98,6 +91,7 @@ typedef struct {
 
 
 Layout LAYOUT; // treat as constant once created
+Snapshot (*stringToSnapshotMA)(const char *str) = NULL;  // only set once
 
 // REMOVE for use in Teensyduino
 int digitalRead(int x);
@@ -105,50 +99,58 @@ int digitalRead(int x) {
   return 0;
 }
 
+int ctoi(const char c);
 
 void handleOutOfMemory();
 void *myalloc(int size);
 
 Key           *newKey       (const int key, const int modifier);
-Snapshot      *newSnapshotA (const FingerState i,
-                             const FingerState m,
-                             const FingerState r,
-                             const FingerState p);
-SwitchHistory *newHistoryA ();
-Output        *newOutputA  ();
+Snapshot      newSnapshotA ();
+SwitchHistory *newHistoryA  ();
+Output        *newOutputA   ();
 
-void deleteSnapshotD          (Snapshot *sM);
+void deleteSnapshotD          (Snapshot sM);
 void deleteHistoryD           (SwitchHistory *hM);
 void deleteOutputD            (Output *oM);
-void discardHistorySnapshotsD (SwitchHistory *hM);
+void discardHistorySnapshotsD (SwitchHistory *hM, int starting_at);
 
 
 boole historyIsEmpty (const SwitchHistory *h);
-boole isRelease      (const Snapshot *s);
+boole isRelease      (const Snapshot s);
 boole historyTooLong (const SwitchHistory *h);
 
-int chordId (const Snapshot *s);
+int chordId (const Snapshot s);
 
-Snapshot *chordFromM (const SwitchHistory *h);
-Output   *outputForM (const Snapshot *sM, const SwitchHistory *h);
+Snapshot chordFromM (const SwitchHistory *h);
+Output   *outputForM (const Snapshot sM, const SwitchHistory *h);
 
 
-SwitchHistory *restartHistoryD (SwitchHistory *h);
-SwitchHistory *addToHistory    (Snapshot *sM, SwitchHistory *h);
+SwitchHistory *restartHistoryD (SwitchHistory *h, int starting_at);
+SwitchHistory *addToHistory    (Snapshot sM, SwitchHistory *h);
 
-ClockReturn clockReturn (SwitchHistory *history, Output *output);
-ClockReturn clock       (Snapshot *currentM, SwitchHistory *history);
+ClockReturn *clockReturn (SwitchHistory *history, Output *output);
+ClockReturn *clock       (Snapshot currentM, SwitchHistory *history);
 
-Snapshot *readInputsAIO ();
+Snapshot readInputsAIO ();
 void      sendKeyIO     (const Key *k);
 void      sendOutputIO  (const Output *oM);
 
-void      loadLayoutA        (char *str);
-Snapshot *stringToSnapshotMA (const char *str);
+void      loadLayoutA        (char *str, Snapshot (*toChordMA)(const char *str));
 Output   *stringToOutputMA   (const char *str);
-void      addToLayoutA       (Snapshot *s, Output *o, const int count);
+void      addToLayoutA       (Snapshot s, Output *o, const int count);
 
 
+Snapshot copySnapshotA(const Snapshot s)
+{
+  Snapshot s_new = newSnapshotA();
+  int i;
+
+  for (i = 0; i < NUM_FINGERS; ++i) {
+    s_new[i] = s[i];
+  }
+
+  return s_new;
+}
 
 void handleOutOfMemory()
 {
@@ -178,19 +180,14 @@ Key *newKey(const int key, const int modifier)
   return k;
 }
 
-Snapshot *newSnapshotA(const FingerState i, const FingerState m, const FingerState r, const FingerState p)
+Snapshot newSnapshotA()
 {
-	Snapshot *s = MALLOC(Snapshot);
-
-	s->index = i;
-	s->middle = m;
-	s->ring = r;
-	s->pinky = p;
+	Snapshot s = MALLOCS(FingerState, NUM_FINGERS);
 
 	return s;
 }
 
-void deleteSnapshotD(Snapshot *sM)
+void deleteSnapshotD(Snapshot sM)
 {
   if (NULL != sM) {
     free(sM);
@@ -201,7 +198,7 @@ SwitchHistory *newHistoryA()
 {
 	SwitchHistory *h = MALLOC(SwitchHistory);
 
-	h->snapshots = MALLOCS(Snapshot *, MAX_SNAPSHOTS);
+	h->snapshots = MALLOCS(Snapshot, MAX_SNAPSHOTS);
 	h->place = 0;
 
 	return h;
@@ -210,9 +207,7 @@ SwitchHistory *newHistoryA()
 void deleteHistoryD(SwitchHistory *hM)
 {
   if (NULL != hM) {
-    int i;
-
-    discardHistorySnapshotsD(hM);
+    discardHistorySnapshotsD(hM, 0);
 
     free(hM->snapshots);
     free(hM);
@@ -220,11 +215,11 @@ void deleteHistoryD(SwitchHistory *hM)
 }
 
 // -N Snapshots
-void discardHistorySnapshotsD(SwitchHistory *h)
+void discardHistorySnapshotsD(SwitchHistory *h, int starting_at)
 {
   int i;
 
-  for (i = 0; i < MAX_SNAPSHOTS; ++i) {
+  for (i = starting_at; i < h->place; ++i) {
     free(h->snapshots[i]);
   }
 }
@@ -240,7 +235,6 @@ Output *newOutputA()
 void deleteOutputD(Output *oM)
 {
   if (NULL != oM) {
-    int i;
 
     free(oM->keys); // individual keys live in LAYOUT, so are never freed
     free(oM);
@@ -254,17 +248,26 @@ boole historyIsEmpty(const SwitchHistory *h)
 	return 0 == h->place;
 }
 
-boole isRelease(const Snapshot *s)
+// All switches have been released?
+boole isRelease(const Snapshot s)
 {
-	return s->pinky == 0 && s->ring == 0 && s->middle == 0 && s->index == 0;
+  int i;
+
+  for (i = 0; i < NUM_FINGERS; ++i) {
+    if (s[i] > 0) {
+      return FALSE;
+    }
+  }
+  
+  return TRUE;
 }
 
 boole historyTooLong(const SwitchHistory *h)
 {
-	return h->place == MAX_SNAPSHOTS;
+	return h->place >= MAX_SNAPSHOTS;
 }
 
-Snapshot *chordFromM(const SwitchHistory *h)
+Snapshot chordFromM(const SwitchHistory *h)
 {
 	if (h->place == 0) {
 		return NULL;
@@ -276,28 +279,26 @@ Snapshot *chordFromM(const SwitchHistory *h)
 
 // -N Snapshots
 // CHANGES h
-SwitchHistory *restartHistoryD(SwitchHistory *h)
+SwitchHistory *restartHistoryD(SwitchHistory *h, int starting_at)
 {
+  discardHistorySnapshotsD(h, starting_at);
 	h->place = 0;
-  discardHistorySnapshotsD(h);
 
 	return h;
 }
 
+// +1 Snapshot
 // CHANGES h
-SwitchHistory *addToHistory(Snapshot *sM, SwitchHistory *h)
+SwitchHistory *addToHistory(Snapshot sM, SwitchHistory *h)
 {
 	if (sM != NULL) {
 		if (historyTooLong(h)) {
-			Snapshot *s0M = chordFromM(h);
-
-			restartHistoryD(h);
-			addToHistory(s0M, h);
+			restartHistoryD(h, 1);
 			addToHistory(sM, h);
 		} else if (isRelease(sM)) {
-			restartHistoryD(h);
+			restartHistoryD(h, 0);
 		} else {
-			h->snapshots[h->place] = sM;
+			h->snapshots[h->place] = copySnapshotA(sM); // +1 Snapshot
 			h->place++;
 		}
 	}
@@ -305,12 +306,18 @@ SwitchHistory *addToHistory(Snapshot *sM, SwitchHistory *h)
 	return h;
 }
 
-int chordId(const Snapshot *s)
+int chordId(const Snapshot s)
 {
-	return s->index + 2*s->middle + 4*s->ring + 8*s->pinky;
+  int i, id = 0;
+
+  for (i = 0; i < NUM_FINGERS; ++i) {
+    id = id << NUM_SWITCHES[i] + s[i];
+  }
+
+  return id;
 }
 
-int chordIndex(const Snapshot *s)
+int chordIndex(const Snapshot s)
 {
   const int id = chordId(s);
   int i;
@@ -324,11 +331,11 @@ int chordIndex(const Snapshot *s)
   return -1;
 }
 
-Output *outputForM(const Snapshot *sM, const SwitchHistory *h)
+Output *outputForM(const Snapshot sM, const SwitchHistory *h)
 {
 	if (NULL != sM && isRelease(sM)) {
 		Output *o;
-		Snapshot *chordM = chordFromM(h);
+		Snapshot chordM = chordFromM(h);
 
 		if (NULL != chordM) {
 			o = LAYOUT.outputs[chordIndex(chordM)];
@@ -345,14 +352,19 @@ Output *outputForM(const Snapshot *sM, const SwitchHistory *h)
 	}
 }
 
-ClockReturn clockReturn(SwitchHistory *history, Output *outputM)
+
+
+ClockReturn *clockReturn(SwitchHistory *h, Output *oM)
 {
-	ClockReturn cr = {history, outputM};
+	ClockReturn *cr = MALLOC(ClockReturn);
+
+  cr->history = h;
+  cr->outputM = oM;
 
 	return cr;
 }
 
-ClockReturn clock(Snapshot *currentM, SwitchHistory *history)
+ClockReturn *clock(Snapshot currentM, SwitchHistory *history)
 {
 	SwitchHistory *new_h;
 	Output *oM;
@@ -365,25 +377,25 @@ ClockReturn clock(Snapshot *currentM, SwitchHistory *history)
 
 
 // +1 Snapshot
-Snapshot *readInputsAIO()
+Snapshot readInputsAIO()
 {
-  int i, multiplier;
-  FingerState index = 0, middle = 0, ring = 0, pinky = 0;
+  int i, j;
+  FingerState state;
 
-  for (i = 0; i < NUM_SWITCHES_I; ++i) {
-    index  = index *2 + digitalRead(SWITCHES_I[i]);
-  }
-  for (i = 0; i < NUM_SWITCHES_M; ++i) {
-    middle = middle*2 + digitalRead(SWITCHES_M[i]);
-  }
-  for (i = 0; i < NUM_SWITCHES_R; ++i) {
-    ring   = ring  *2 + digitalRead(SWITCHES_R[i]);
-  }
-  for (i = 0; i < NUM_SWITCHES_P; ++i) {
-    pinky  = pinky *2 + digitalRead(SWITCHES_P[i]);
+  Snapshot s = newSnapshotA();  // +1 Snapshot
+
+  for (i = 0; i < NUM_FINGERS; ++i) {
+    state = 0;
+
+    for (j = 0; j < NUM_SWITCHES[j]; ++j) {
+      // shift by 1, put new bit at end
+      state  = state << 1 + digitalRead(SWITCHES[i][j]);
+    }
+
+    s[i] = state;
   }
 
-  return newSnapshotA(index, middle, ring, pinky);
+  return s;
 }
 
 void sendOutputIO(const Output *oM)
@@ -417,11 +429,10 @@ void sendKeyIO(const Key *k)
   }
 }
 
-
-void loadLayoutA(char *str)
+void loadLayoutA(char *str, Snapshot (*toChordMA)(const char *str))
 {
   char *chordstrM, *textM;
-  Snapshot *chordM;
+  Snapshot chordM;
   Output *oM;
 
   int count = 0;
@@ -431,15 +442,15 @@ void loadLayoutA(char *str)
 
   while (NULL != lineM) {
 
-    chordstrM = MALLOCS(char, 4); // +1 String
-    textM     = MALLOCS(char, 9); // +1 String
+    chordstrM = MALLOCS(char, 8); // +1 String
+    textM     = MALLOCS(char, 20); // +1 String
 
     sscanf(lineM, "%s %s", chordstrM, textM);
 
     if (NULL != chordstrM && NULL != textM) {
 
       // these 2 live in LAYOUT for duration of program
-      chordM = stringToSnapshotMA(chordstrM); // +1 Snapshot M
+      chordM = (*toChordMA)(chordstrM); // +1 Snapshot M
       oM     = stringToOutputMA(textM); // +1 Output M
 
       if (NULL != chordM && NULL != oM) {
@@ -455,23 +466,33 @@ void loadLayoutA(char *str)
   }
 
   free(lineM); // -1 String
+
+  printf("done loading\n");
 }
 
-/* REQUIREMENT: str must be at least 4 chars long */
-Snapshot *stringToSnapshotMA(const char *str)
+/* REQUIREMENT: str must be at least NUM_FINGERS chars long */
+Snapshot default_stringToSnapshotMA(const char *str)
 {
   int i;
+  Snapshot s = newSnapshotA();  // +1 Snapshot
 
-  for (i = 0; i < 4; ++i) {
-    
+  for (i = 0; i < NUM_FINGERS; ++i) {
+    s[i] = ctoi(str[i]);
   }
+
+  return s;
+}
+
+int ctoi(const char c)
+{
+  return c - '0';
 }
 
 Output *stringToOutputMA(const char *str)
 {
 }
 
-void addToLayoutA(Snapshot *s, Output *o, const int count)
+void addToLayoutA(Snapshot s, Output *o, const int count)
 {
   LAYOUT.chords[count]  = s;
   LAYOUT.ids[count]     = chordId(s);
@@ -488,30 +509,47 @@ void setup() {
   history_GLOBAL = newHistoryA();
 
 	// TODO: create LAYOUT from config
+  if (NULL == stringToSnapshotMA) {
+    stringToSnapshotMA = &default_stringToSnapshotMA;
+  }
 }
 
 void loop() {
   // get function input
-  Snapshot *current = readInputsAIO(); // +1 Snapshot - deleted in restartHistoryD
-  SwitchHistory * h = history_GLOBAL;
+  Snapshot current = readInputsAIO(); // +1 Snapshot - deleted in restartHistoryD
+  SwitchHistory *h = history_GLOBAL;
 
   // call the pure function
-	ClockReturn r = clock(current, h); // + 1 Output
+	ClockReturn *r = clock(current, h); // + 1 Output
 
-	sendOutputIO(r.outputM);
+  deleteSnapshotD(current);
+
+	sendOutputIO(r->outputM);
 
   // set function output
-	history_GLOBAL = r.history;
+  // THIS ALREADY HAPPENED - just here for reference
+	// history_GLOBAL = r->history;
 
   // cleanup
-  deleteOutputD(r.outputM); // -1 Output
+  deleteOutputD(r->outputM); // -1 Output
+  free(r);
 }
 
+void testNewDelete()
+{
+  for (;;) {
+    deleteSnapshotD(newSnapshotA());
+    deleteHistoryD(newHistoryA());
+    deleteOutputD(newOutputA());
+  }
+}
 
 void main() {
 	setup();
 	for(;;) {
 		loop();
 	}
+
+  testNewDelete();
 }
 
