@@ -131,25 +131,26 @@ void discardHistorySnapshotsD (SwitchHistory *hM, int starting_at);
 
 
 boole historyIsEmpty (const SwitchHistory *h);
-boole isRelease      (const Snapshot s);
 boole historyTooLong (const SwitchHistory *h);
+Snapshot chordFromM  (const SwitchHistory *h);
 
-int chordId (const Snapshot s);
-
-Snapshot chordFromM (const SwitchHistory *h);
-Output   *outputForM (const Snapshot sM, const SwitchHistory *h);
-
+boole isRelease (const Snapshot s);
+int chordId     (const Snapshot s);
 
 SwitchHistory *restartHistoryD (SwitchHistory *h, int starting_at);
 SwitchHistory *addToHistory    (Snapshot sM, SwitchHistory *h);
+
 Output        *addToOutput     (Key *k, Output *o);
+
+Output *outputForM (const Snapshot sM, const SwitchHistory *h, const Layout *l);
+int chordIndex     (const Snapshot s, const Layout *l);
 
 ClockReturn *clockReturn (SwitchHistory *history, Output *output);
 ClockReturn *clock       (Snapshot currentM, SwitchHistory *history);
 
 Snapshot readInputsAIO ();
-void      sendKeyIO     (const Key *k);
-void      sendOutputIO  (const Output *oM);
+void     sendKeyIO     (const Key *k);
+void     sendOutputIO  (const Output *oM);
 
 void      loadLayoutA        (char *str, Snapshot (*toChordMA)(const char *str), Layout *l);
 Output   *stringToOutputMA   (const char *str);
@@ -312,7 +313,7 @@ Snapshot chordFromM(const SwitchHistory *h)
 SwitchHistory *restartHistoryD(SwitchHistory *h, int starting_at)
 {
   discardHistorySnapshotsD(h, starting_at);
-	h->place = 0;
+	h->place = starting_at;
 
 	return h;
 }
@@ -347,13 +348,13 @@ Output *addToOutput(Key *k, Output *o)
   return o;
 }
 
-int chordIndex(const Snapshot s)
+int chordIndex(const Snapshot s, const Layout *l)
 {
   const int id = chordId(s);
   int i;
 
   for (i = 0; i < LAYOUT_SIZE; ++i) {
-    if (id == LAYOUT.ids[i]) {
+    if (id == l->ids[i]) {
       return i;
     }
   }
@@ -361,14 +362,14 @@ int chordIndex(const Snapshot s)
   return -1;
 }
 
-Output *outputForM(const Snapshot sM, const SwitchHistory *h)
+Output *outputForM(const Snapshot sM, const SwitchHistory *h, const Layout *l)
 {
 	if (NULL != sM && isRelease(sM)) {
 		Output *o;
 		Snapshot chordM = chordFromM(h);
 
 		if (NULL != chordM) {
-			o = LAYOUT.outputs[chordIndex(chordM)];
+			o = l->outputs[chordIndex(chordM, l)];
     } else {
       o = NULL;
     }
@@ -400,7 +401,7 @@ ClockReturn *clock(Snapshot currentM, SwitchHistory *history)
 	Output *oM;
 
 	new_h = addToHistory(currentM, history);
-	oM    = outputForM(currentM, new_h);
+	oM    = outputForM(currentM, new_h, & LAYOUT);
 
 	return clockReturn(new_h, oM);
 }
