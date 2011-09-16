@@ -109,13 +109,18 @@ int digitalRead(int x) {
 #define KEY_ESC 4
 #define KEY_BKSP 5
 
+
+
+
+
+
 int ctoi(const char c);
 
 void handleOutOfMemory();
 void *myalloc(int size);
 
-Key           *newKey       (const int key, const int modifier);
-Snapshot      newSnapshotA ();
+Key           *newKeyA      (const int key, const int modifier);
+Snapshot      newSnapshotA  ();
 SwitchHistory *newHistoryA  ();
 Output        *newOutputA   ();
 
@@ -151,6 +156,9 @@ Output   *stringToOutputMA   (const char *str);
 void      addToLayoutA       (Snapshot s, Output *o);
 
 
+
+
+
 Snapshot copySnapshotA(const Snapshot s)
 {
   Snapshot s_new = newSnapshotA();
@@ -181,7 +189,7 @@ void *myalloc(int size)
 
 
 // Never deleted - these live in LAYOUT for duration of program
-Key *newKey(const int key, const int modifier)
+Key *newKeyA(const int key, const int modifier)
 {
   Key *k = MALLOC(Key);
 
@@ -520,23 +528,23 @@ Output *stringToOutputMA(const char *str)
   Key *k;
 
   if (strlen(str) == 1) {
-    k = newKey(str[0], 0);
+    k = newKeyA(str[0], 0);
   } else if (strcmp(str, "control") == 0) {
-    k = newKey(0, MODIFIERKEY_CTRL);
+    k = newKeyA(0, MODIFIERKEY_CTRL);
   } else if (strcmp(str, "shift") == 0) {
-    k = newKey(0, MODIFIERKEY_SHIFT);
+    k = newKeyA(0, MODIFIERKEY_SHIFT);
   } else if (strcmp(str, "alt") == 0) {
-    k = newKey(0, MODIFIERKEY_ALT);
+    k = newKeyA(0, MODIFIERKEY_ALT);
   } else if (strcmp(str, "win") == 0) {
-    k = newKey(0, MODIFIERKEY_GUI);
+    k = newKeyA(0, MODIFIERKEY_GUI);
   } else if (strcmp(str, "return") == 0) {
-    k = newKey(KEY_ENTER, 0);
+    k = newKeyA(KEY_ENTER, 0);
   } else if (strcmp(str, "space") == 0) {
-    k = newKey(KEY_SPACE, 0);
+    k = newKeyA(KEY_SPACE, 0);
   } else if (strcmp(str, "backspace") == 0) {
-    k = newKey(KEY_BKSP, 0);
+    k = newKeyA(KEY_BKSP, 0);
   } else if (strcmp(str, "esc") == 0) {
-    k = newKey(KEY_ESC, 0);
+    k = newKeyA(KEY_ESC, 0);
   } else {
     // no output
     return NULL;
