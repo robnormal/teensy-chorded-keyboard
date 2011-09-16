@@ -13,7 +13,7 @@ void setup() {
     stringToSnapshotMA = &default_stringToSnapshotMA;
   }
 
-  loadLayoutA(layoutString(), stringToSnapshotMA);
+  loadLayoutA(layoutString(), stringToSnapshotMA, & LAYOUT);
 }
 
 void loop() {

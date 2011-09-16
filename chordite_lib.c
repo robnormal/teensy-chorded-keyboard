@@ -151,9 +151,9 @@ Snapshot readInputsAIO ();
 void      sendKeyIO     (const Key *k);
 void      sendOutputIO  (const Output *oM);
 
-void      loadLayoutA        (char *str, Snapshot (*toChordMA)(const char *str));
+void      loadLayoutA        (char *str, Snapshot (*toChordMA)(const char *str), Layout *l);
 Output   *stringToOutputMA   (const char *str);
-void      addToLayoutA       (Snapshot s, Output *o);
+Layout   *addToLayoutA       (Snapshot s, Output *o, Layout *l);
 
 
 
@@ -286,6 +286,17 @@ boole historyTooLong(const SwitchHistory *h)
 	return h->place >= MAX_SNAPSHOTS;
 }
 
+int chordId(const Snapshot s)
+{
+  int i, id = 0;
+
+  for (i = 0; i < NUM_FINGERS; ++i) {
+    id = (id << NUM_SWITCHES[i]) + s[i];
+  }
+
+  return id;
+}
+
 Snapshot chordFromM(const SwitchHistory *h)
 {
 	if (h->place == 0) {
@@ -334,17 +345,6 @@ Output *addToOutput(Key *k, Output *o)
   }
 
   return o;
-}
-
-int chordId(const Snapshot s)
-{
-  int i, id = 0;
-
-  for (i = 0; i < NUM_FINGERS; ++i) {
-    id = id << NUM_SWITCHES[i] + s[i];
-  }
-
-  return id;
 }
 
 int chordIndex(const Snapshot s)
@@ -461,7 +461,7 @@ void sendKeyIO(const Key *k)
 
 // +1 Snapshot M
 // +1 Output M
-void loadLayoutStringsA(char * chordstrM, char *textM, Snapshot (*toChordMA)(const char *str))
+void loadLayoutStringsA(char * chordstrM, char *textM, Snapshot (*toChordMA)(const char *str), Layout *l)
 {
   if (NULL != chordstrM && NULL != textM) {
     Snapshot chordM;
@@ -472,12 +472,12 @@ void loadLayoutStringsA(char * chordstrM, char *textM, Snapshot (*toChordMA)(con
     oM     = stringToOutputMA(textM); // +1 Output M
 
     if (NULL != chordM && NULL != oM) {
-      addToLayoutA(chordM, oM);
+      addToLayoutA(chordM, oM, l);
     }
   }
 }
 
-void loadLayoutA(char *str, Snapshot (*toChordMA)(const char *str))
+void loadLayoutA(char *str, Snapshot (*toChordMA)(const char *str), Layout *l)
 {
   char *lineM     = MALLOCS(char, 40);
   char *chordstrM = MALLOCS(char, 8);
@@ -493,7 +493,7 @@ void loadLayoutA(char *str, Snapshot (*toChordMA)(const char *str))
   while (NULL != lineM) {
     sscanf(lineM, "%s %s", chordstrM, textM);
 
-    loadLayoutStringsA(chordstrM, textM, toChordMA);
+    loadLayoutStringsA(chordstrM, textM, toChordMA, l);
 
     lineM = strtok(NULL, "\n");
     ++count;
@@ -556,12 +556,15 @@ Output *stringToOutputMA(const char *str)
   return o;
 }
 
-void addToLayoutA(Snapshot s, Output *o)
+Layout *addToLayoutA(Snapshot s, Output *o, Layout *l)
 {
-  LAYOUT.chords[LAYOUT.count]  = s;
-  LAYOUT.ids[LAYOUT.count]     = chordId(s);
-  LAYOUT.outputs[LAYOUT.count] = o;
-  LAYOUT.count++;
+  l->chords [l->count] = s;
+  l->ids    [l->count] = chordId(s);
+  l->outputs[l->count] = o;
+
+  l->count++;
+
+  return l;
 }
 
 

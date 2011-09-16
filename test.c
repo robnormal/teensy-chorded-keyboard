@@ -27,6 +27,18 @@ void refuse(int cond, char *msg)
 
 
 
+Snapshot example1A()
+{
+  int i;
+
+  Snapshot example = newSnapshotA();
+	for (i = 0; i < NUM_FINGERS; i++) {
+		example[i] = i % 2; // just for variety, kinda
+	}
+  
+  return example;
+}
+
 TEST(ctoi)
   insist(ctoi('5') == 5, "ctoi converts char to int");
 END_TEST
@@ -38,14 +50,6 @@ TEST(newKey)
 	insist(k->modifier == 1, "");
 
 	free(k);
-END_TEST
-
-TEST(history)
-	SwitchHistory *h = newHistoryA();
-
-	insist(historyIsEmpty(h), "");
-
-	deleteHistoryD(h);
 END_TEST
 
 TEST(snapshot)
@@ -62,8 +66,35 @@ TEST(snapshot)
 
 	refuse(isRelease(s), "");
 
+	s[0] = 0;
+  insist(chordId(s) == 0, "");
+  insist(chordId(example1A()) == 1 + 16, "");
+
+
 	deleteSnapshotD(s);
 END_TEST
+
+TEST(history)
+  int i;
+	SwitchHistory *h = newHistoryA();
+
+	insist(historyIsEmpty(h), "");
+
+  Snapshot example = example1A();
+
+  for (i = 0; i < MAX_SNAPSHOTS - 1; i++) {
+    h = addToHistory(example, h);
+  }
+
+  refuse(historyTooLong(h), "");
+    
+  h = addToHistory(example, h);
+  insist(historyTooLong(h), "");
+
+	deleteHistoryD(h);
+	deleteSnapshotD(example);
+END_TEST
+
 
 int main(void) {
   test_ctoi();
