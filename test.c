@@ -150,12 +150,31 @@ TEST(output)
   deleteOutputD(o);
 END_TEST
 
+TEST(string2out)
+	Output *o = stringToOutputMA("o");
+	insist(o->count == 1, "");
+	insist(o->keys[0]->key == 'o', "");
+	insist(o->keys[0]->modifier == 0, "");
+	deleteOutputD(o);
+
+	Output *oo = stringToOutputMA("return");
+	insist(oo->count == 1, "");
+	insist(oo->keys[0]->key == KEY_ENTER, "");
+	deleteOutputD(oo);
+
+	Output *x = stringToOutputMA("hello");
+	insist(x->count == 5, "");
+	insist(x->keys[4]->key == 'o', "");
+	deleteOutputD(x);
+END_TEST
+
 int main(void) {
   test_ctoi();
   test_newKey();
 	test_history();
 	test_snapshot();
 	test_output();
+	test_string2out();
 
   printf("%i passed, %i failed\n", __total_asserts - __failures, __failures);
 }

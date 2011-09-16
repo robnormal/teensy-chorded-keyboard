@@ -248,6 +248,7 @@ Output *newOutputA()
 {
 	Output *o = MALLOC(Output);
 	o->keys   = MALLOCS(Key *,MAX_OUTPUT);
+	o->count  = 0;
 
 	return o;
 }
@@ -522,7 +523,7 @@ int ctoi(const char c)
   return c - '0';
 }
 
-// +1 Key
+// +N Keys
 // +1 Output
 Output *stringToOutputMA(const char *str)
 {
@@ -547,8 +548,14 @@ Output *stringToOutputMA(const char *str)
   } else if (strcmp(str, "esc") == 0) {
     k = newKeyA(KEY_ESC, 0);
   } else {
-    // no output
-    return NULL;
+		int i, chars = strlen(str);
+		Output *o = newOutputA();
+
+		for (i = 0; i < chars; i++) {
+			addToOutput(newKeyA(str[i], 0), o);
+		}
+
+    return o;
   }
 
   Output *o = newOutputA();
