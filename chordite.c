@@ -13,7 +13,7 @@ void setup() {
     stringToSnapshotMA = &default_stringToSnapshotMA;
   }
 
-  loadLayoutA(layoutString(), stringToSnapshotMA, & LAYOUT);
+  LAYOUT = loadLayoutA(layoutString(), stringToSnapshotMA);
 }
 
 void loop() {
@@ -22,7 +22,7 @@ void loop() {
   SwitchHistory *h = history_GLOBAL;
 
   // call the pure function
-	ClockReturn *r = clock(current, h); // + 1 Output
+	ClockReturn *r = clock(current, h, LAYOUT); // + 1 Output
 
   deleteSnapshotD(current);
 

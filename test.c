@@ -76,7 +76,7 @@ TEST(snapshot)
 
 	s[0] = 0;
   insist(chordId(s) == 0, "");
-  insist(chordId(example1A()) == 1 + 16, "");
+  insist(chordId(example1A()) == 1*1 + 0*3 + 1*9 + 0*27, "");
 
 	deleteSnapshotD(s);
 END_TEST
@@ -168,6 +168,42 @@ TEST(string2out)
 	deleteOutputD(x);
 END_TEST
 
+TEST(strToSnap)
+	Snapshot s = default_stringToSnapshotMA("3010");
+	insist(s[0] == 3, "");
+	insist(s[1] == 0, "");
+	insist(s[2] == 1, "");
+	deleteSnapshotD(s);
+END_TEST
+
+TEST(layout)
+	Layout *l = newLayoutA();
+  l = loadLayoutStringsA("3012", "e", default_stringToSnapshotMA, l);
+	insist(l->count == 1, "");
+	insist(l->chords[0][0] == 3 && l->chords[0][3] == 2, "");
+	insist(l->ids[0] == chordId(l->chords[0]), "Layout ids match chords");
+	insist(l->outputs[0]->keys[0]->key == 'e', "Layout output matches config string");
+
+  l = loadLayoutStringsA("1110", "return", default_stringToSnapshotMA, l);
+	insist(l->outputs[1]->keys[0]->key == KEY_ENTER, "Special-named outputs are loaded into layout");
+
+  l = loadLayoutStringsA("1010", "hello", default_stringToSnapshotMA, l);
+	insist(l->outputs[2]->keys[4]->key == 'o', "Multi-character string outputs are loaded into layout");
+	insist(l->count == 3, "");
+
+	free(l);
+
+	Layout *ll = loadLayoutA("3012 e\n1110 return\n1010 helLo\n", default_stringToSnapshotMA);
+	insist(ll->count == 3, "");
+	insist(ll->outputs[1]->keys[0]->key == KEY_ENTER, "");
+
+	insist(ll->ids[0] == chordId(ll->chords[0]), "");
+	insist(ll->ids[1] == chordId(ll->chords[1]), "");
+	insist(ll->outputs[2]->keys[3]->key == 'L', "");
+	free(ll);
+
+END_TEST
+
 int main(void) {
   test_ctoi();
   test_newKey();
@@ -175,6 +211,8 @@ int main(void) {
 	test_snapshot();
 	test_output();
 	test_string2out();
+	test_strToSnap();
+	test_layout();
 
   printf("%i passed, %i failed\n", __total_asserts - __failures, __failures);
 }

@@ -80,9 +80,9 @@ typedef struct {
 } Output;
 
 typedef struct {
-  int ids[LAYOUT_SIZE];
-  Snapshot chords[LAYOUT_SIZE];
-  Output   *outputs[LAYOUT_SIZE];
+  int *ids;
+  Snapshot *chords;
+  Output   **outputs;
   int count;
 } Layout;
 
@@ -92,7 +92,7 @@ typedef struct {
 } ClockReturn;
 
 
-Layout LAYOUT; // treat as constant once created
+Layout *LAYOUT; // treat as constant once created
 Snapshot (*stringToSnapshotMA)(const char *str) = NULL;  // only set once
 
 // REMOVE for use in Teensyduino
@@ -119,10 +119,11 @@ int ctoi(const char c);
 void handleOutOfMemory();
 void *myalloc(int size);
 
-Key           *newKeyA      (const int key, const int modifier);
-Snapshot      newSnapshotA  ();
-SwitchHistory *newHistoryA  ();
-Output        *newOutputA   ();
+Key           *newKeyA     (const int key, const int modifier);
+Snapshot      newSnapshotA ();
+SwitchHistory *newHistoryA ();
+Output        *newOutputA  ();
+Layout        *newLayoutA  ();
 
 void deleteSnapshotD          (Snapshot sM);
 void deleteHistoryD           (SwitchHistory *hM);
@@ -146,17 +147,15 @@ Output *outputForM (const Snapshot sM, const SwitchHistory *h, const Layout *l);
 int chordIndex     (const Snapshot s, const Layout *l);
 
 ClockReturn *clockReturn (SwitchHistory *history, Output *output);
-ClockReturn *clock       (Snapshot currentM, SwitchHistory *history);
+ClockReturn *clock       (Snapshot currentM, SwitchHistory *history, Layout *l);
 
 Snapshot readInputsAIO ();
 void     sendKeyIO     (const Key *k);
 void     sendOutputIO  (const Output *oM);
 
-void      loadLayoutA        (char *str, Snapshot (*toChordMA)(const char *str), Layout *l);
-Output   *stringToOutputMA   (const char *str);
-Layout   *addToLayoutA       (Snapshot s, Output *o, Layout *l);
-
-
+Layout   *loadLayoutA      (char *str, Snapshot (*toChordMA)(const char *str));
+Output   *stringToOutputMA (const char *str);
+Layout   *addToLayoutA     (Snapshot s, Output *o, Layout *l);
 
 
 
@@ -262,6 +261,17 @@ void deleteOutputD(Output *oM)
   }
 }
 
+Layout *newLayoutA()
+{
+	Layout *l  = MALLOC(Layout);
+	l->ids     = MALLOCS(int, LAYOUT_SIZE);
+	l->outputs = MALLOCS(Output *, LAYOUT_SIZE);
+	l->chords  = MALLOCS(Snapshot, LAYOUT_SIZE);
+	l->count   = 0;
+
+	return l;
+}
+
 
 
 boole historyIsEmpty(const SwitchHistory *h)
@@ -290,11 +300,14 @@ boole historyTooLong(const SwitchHistory *h)
 
 int chordId(const Snapshot s)
 {
-  int i, id = 0;
+  int i, multiplier = 1, id = 0;
 
+	// number-base style, this forms unique IDS using the smallest possible integers
   for (i = 0; i < NUM_FINGERS; ++i) {
-    id = (id << NUM_SWITCHES[i]) + s[i];
-  }
+		id += s[i] * multiplier;
+
+		multiplier *= NUM_SWITCHES[i];
+	}
 
   return id;
 }
@@ -396,13 +409,13 @@ ClockReturn *clockReturn(SwitchHistory *h, Output *oM)
 	return cr;
 }
 
-ClockReturn *clock(Snapshot currentM, SwitchHistory *history)
+ClockReturn *clock(Snapshot currentM, SwitchHistory *history, Layout *l)
 {
 	SwitchHistory *new_h;
 	Output *oM;
 
 	new_h = addToHistory(currentM, history);
-	oM    = outputForM(currentM, new_h, & LAYOUT);
+	oM    = outputForM(currentM, new_h, l);
 
 	return clockReturn(new_h, oM);
 }
@@ -463,7 +476,7 @@ void sendKeyIO(const Key *k)
 
 // +1 Snapshot M
 // +1 Output M
-void loadLayoutStringsA(char * chordstrM, char *textM, Snapshot (*toChordMA)(const char *str), Layout *l)
+Layout *loadLayoutStringsA(char * chordstrM, char *textM, Snapshot (*toChordMA)(const char *str), Layout *l)
 {
   if (NULL != chordstrM && NULL != textM) {
     Snapshot chordM;
@@ -474,12 +487,17 @@ void loadLayoutStringsA(char * chordstrM, char *textM, Snapshot (*toChordMA)(con
     oM     = stringToOutputMA(textM); // +1 Output M
 
     if (NULL != chordM && NULL != oM) {
-      addToLayoutA(chordM, oM, l);
+      l = addToLayoutA(chordM, oM, l);
     }
   }
+
+	return l;
 }
 
-void loadLayoutA(char *str, Snapshot (*toChordMA)(const char *str), Layout *l)
+// +1 Layout
+// +N Snapshot
+// +N Output
+Layout *loadLayoutA(char *str, Snapshot (*toChordMA)(const char *str))
 {
   char *lineM     = MALLOCS(char, 40);
   char *chordstrM = MALLOCS(char, 8);
@@ -490,12 +508,13 @@ void loadLayoutA(char *str, Snapshot (*toChordMA)(const char *str), Layout *l)
   char newstr[500];
   strcpy(newstr, str);
 
+	Layout *l = newLayoutA(); // +1 Layout
 
   lineM = strtok(newstr, "\n");
   while (NULL != lineM) {
     sscanf(lineM, "%s %s", chordstrM, textM);
 
-    loadLayoutStringsA(chordstrM, textM, toChordMA, l);
+    l = loadLayoutStringsA(chordstrM, textM, toChordMA, l); // +1 Snapshot M; +1 Output M
 
     lineM = strtok(NULL, "\n");
     ++count;
@@ -503,6 +522,8 @@ void loadLayoutA(char *str, Snapshot (*toChordMA)(const char *str), Layout *l)
 
 
   free(lineM); free(chordstrM); free(textM);
+
+	return l;
 }
 
 /* REQUIREMENT: str must be at least NUM_FINGERS chars long */
@@ -566,8 +587,8 @@ Output *stringToOutputMA(const char *str)
 
 Layout *addToLayoutA(Snapshot s, Output *o, Layout *l)
 {
-  l->chords [l->count] = s;
   l->ids    [l->count] = chordId(s);
+  l->chords [l->count] = s;
   l->outputs[l->count] = o;
 
   l->count++;
