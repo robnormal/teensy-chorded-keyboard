@@ -27,29 +27,45 @@ void refuse(int cond, char *msg)
 
 
 
-Snapshot example0A()
-{
-  int i;
+Snapshot example0A() {
+  Snapshot s = newSnapshotA();
 
-  Snapshot example = newSnapshotA();
-	for (i = 0; i < NUM_FINGERS; i++) {
-		example[i] = 0;
-	}
+	s[0] = 0;
+	s[1] = 0;
+	s[2] = 0;
+	s[3] = 0;
   
-  return example;
+  return s;
 }
+Snapshot example1A() {
+  Snapshot s = newSnapshotA();
 
-
-Snapshot example1A()
-{
-  int i;
-
-  Snapshot example = newSnapshotA();
-	for (i = 0; i < NUM_FINGERS; i++) {
-		example[i] = i % 2; // just for variety, kinda
-	}
+	s[0] = 2;
+	s[1] = 1;
+	s[2] = 0;
+	s[3] = 3;
   
-  return example;
+  return s;
+}
+Snapshot example2A() {
+  Snapshot s = newSnapshotA();
+
+	s[0] = 2;
+	s[1] = 1;
+	s[2] = 0;
+	s[3] = 1;
+  
+  return s;
+}
+Snapshot example3A() {
+  Snapshot s = newSnapshotA();
+
+	s[0] = 0;
+	s[1] = 0;
+	s[2] = 1;
+	s[3] = 0;
+  
+  return s;
 }
 
 TEST(ctoi)
@@ -66,46 +82,54 @@ TEST(newKey)
 END_TEST
 
 TEST(snapshot)
-	Snapshot s = example0A();
+	Snapshot s0 = example0A();
+	Snapshot s1 = example1A();
+	Snapshot s2 = example2A();
+	Snapshot s3 = example3A();
 
-	insist(isRelease(s), "");
-		
-	s[0] = 1;
+	insist(isRelease(s0), "All zeros means release");
 
-	refuse(isRelease(s), "");
+	s0[0] = 1;
+	refuse(isRelease(s0), "");
+	s0[0] = 0;
 
-	s[0] = 0;
-  insist(chordId(s) == 0, "");
-  insist(chordId(example1A()) == 1*1 + 0*3 + 1*9 + 0*27, "");
+  insist(chordId(s0) == 0, "");
+  insist(chordId(s1) == 2*1 + 1*3 + 0*9 + 3*27, "");
 
-	deleteSnapshotD(s);
+	refuse(newSwitchPressed(s1, s2), "released switch not counted as new press");
+	insist(newSwitchPressed(s2, s3), "");
+
+	deleteSnapshotD(s3);
+	deleteSnapshotD(s2);
+	deleteSnapshotD(s1);
+	deleteSnapshotD(s0);
 END_TEST
 
 TEST(history)
   int i;
 	SwitchHistory *h = newHistoryA();
 
-	insist(historyIsEmpty(h), "");
+	insist(historyIsEmpty(h), "New history is empty");
   insist(chordFromM(h) == NULL, "Empty history returns NULL for chordFromM");
 
   Snapshot s0 = example0A();
-  s0[PINKY] = 1; // otherwise, s0 would be a "release"
-
   Snapshot s1 = example1A();
+  Snapshot s2 = example2A();
+  Snapshot s3 = example3A();
 
-  h = addToHistory(s0, h);
+  h = addToHistory(s1, h);
   insist(h->place == 1, "addToHistory increments history.place");
 
   for (i = 1; i < MAX_SNAPSHOTS - 1; i++) {
-    h = addToHistory(s1, h);
+    h = addToHistory(s2, h);
   }
 
   refuse(historyTooLong(h), "");
     
-  h = addToHistory(s1, h);
+  h = addToHistory(s2, h);
   insist(historyTooLong(h), "");
 
-  insist(chordId(chordFromM(h)) == chordId(s0), "chordFromM returns first chord in history");
+  insist(chordId(chordFromM(h)) == chordId(s1), "chordFromM returns first chord in history");
 
   restartHistoryD(h, 2);
   insist(h->place == 2, "");
@@ -113,16 +137,25 @@ TEST(history)
   restartHistoryD(h, 0);
   insist(h->place == 0, "");
   
-  s0[PINKY] = 0;
   h = addToHistory(s1, h);
   h = addToHistory(s1, h);
   h = addToHistory(s0, h);
 
   insist(h->place == 0, "adding a 0 chord restarts history");
 
+  h = addToHistory(s1, h);
+  h = addToHistory(s2, h);
+  h = addToHistory(s2, h);
+  h = addToHistory(s3, h);
+
+  insist(h->place == 1, "When new switch is pressed, history restarts");
+  insist(chordId(h->snapshots[0]) == chordId(s3), "When new switch is pressed, history uses new chord as first entry");
+
 	deleteHistoryD(h);
 	deleteSnapshotD(s0);
 	deleteSnapshotD(s1);
+	deleteSnapshotD(s2);
+	deleteSnapshotD(s3);
 END_TEST
 
 TEST(output)

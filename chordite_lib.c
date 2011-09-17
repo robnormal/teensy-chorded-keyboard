@@ -44,7 +44,8 @@ const int SWITCHES[NUM_FINGERS][2] = {
   { PINKY_L,  PINKY_H  }
 };
 
-const int NUM_SWITCHES[NUM_FINGERS] = {2, 2, 2, 2};
+// chordite has 2 switches per finger, plus pressing _both_, which counts separately
+const int NUM_SWITCHES[NUM_FINGERS] = {3, 3, 3, 3}; 
 
 /** END **/
 
@@ -141,8 +142,9 @@ int chordId     (const Snapshot s);
 SwitchHistory *restartHistoryD (SwitchHistory *h, int starting_at);
 SwitchHistory *addToHistory    (Snapshot sM, SwitchHistory *h);
 
-Output        *addToOutput     (Key *k, Output *o);
+Output *addToOutput (Key *k, Output *o);
 
+boole newSwitchPressed(const Snapshot a, const Snapshot b);
 Output *outputForM (const Snapshot sM, const SwitchHistory *h, const Layout *l);
 int chordIndex     (const Snapshot s, const Layout *l);
 
@@ -312,15 +314,6 @@ int chordId(const Snapshot s)
   return id;
 }
 
-Snapshot chordFromM(const SwitchHistory *h)
-{
-	if (h->place == 0) {
-		return NULL;
-	} else {
-		return h->snapshots[0];
-	}
-}
-
 
 // -N Snapshots
 // CHANGES h
@@ -332,19 +325,53 @@ SwitchHistory *restartHistoryD(SwitchHistory *h, int starting_at)
 	return h;
 }
 
+Snapshot lastSnapshotM(const SwitchHistory *h) {
+	if (historyIsEmpty(h)) {
+		return NULL;
+	} else {
+		return h->snapshots[h->place - 1];
+	}
+}
+
+/**
+ * Append Snapshot to SwitchHistory. 
+ *
+ * If isRelease(Snapshot), discard history.
+ *
+ * If new switch is pressed, restart history beginning with the current Snapshot.
+ *
+ * If SwitchHistory would exceed its maximum length, replace the entire history
+ * with just the chord that history would send out were it released now
+ * (the chord that history is "working" on), then append the new Snapshot.
+ */
 // +1 Snapshot
 // CHANGES h
 SwitchHistory *addToHistory(Snapshot sM, SwitchHistory *h)
 {
 	if (sM != NULL) {
 		if (historyTooLong(h)) {
-			restartHistoryD(h, 1);
-			addToHistory(sM, h);
+			Snapshot new_firstM = chordFromM(h);
+
+			if (NULL == new_firstM) {
+				restartHistoryD(h, 0);
+			} else {
+				// copy chord, because it may be free()d when we restartHistoryD
+				h->snapshots[0] = copySnapshotA(new_firstM);
+				restartHistoryD(h, 1);
+				addToHistory(sM, h);
+			}
 		} else if (isRelease(sM)) {
 			restartHistoryD(h, 0);
 		} else {
-			h->snapshots[h->place] = copySnapshotA(sM); // +1 Snapshot
-			h->place++;
+			Snapshot lastM = lastSnapshotM(h);
+
+			if (NULL != lastM && newSwitchPressed(lastM, sM)) {
+				restartHistoryD(h, 0);
+				addToHistory(sM, h);
+			} else {
+				h->snapshots[h->place] = copySnapshotA(sM); // +1 Snapshot
+				h->place++;
+			}
 		}
 	}
 
@@ -414,8 +441,8 @@ ClockReturn *clock(Snapshot currentM, SwitchHistory *history, Layout *l)
 	SwitchHistory *new_h;
 	Output *oM;
 
+	oM    = outputForM(currentM, history, l);
 	new_h = addToHistory(currentM, history);
-	oM    = outputForM(currentM, new_h, l);
 
 	return clockReturn(new_h, oM);
 }
@@ -526,6 +553,38 @@ Layout *loadLayoutA(char *str, Snapshot (*toChordMA)(const char *str))
 	return l;
 }
 
+
+/*** These functions must be altered for different keyboards ***/
+Snapshot chordFromM(const SwitchHistory *h)
+{
+	if (h->place == 0) {
+		return NULL;
+	} else {
+		return h->snapshots[0];
+	}
+}
+
+boole newSwitchPressed(const Snapshot a, const Snapshot b)
+{
+	int i;
+
+	// these are the rules for the chordite
+	// 3 -> * = no
+	// 2 -> {0|2} = no
+	// 1 -> {0|1} = no
+	// 0 -> {0|0} = no
+	// otherwise  = yes
+	for (i = 0; i < NUM_FINGERS; i++) {
+		if ( b[i] > a[i]
+		  || (a[i] == 2 && b[i] == 1)
+		) {
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
 /* REQUIREMENT: str must be at least NUM_FINGERS chars long */
 Snapshot default_stringToSnapshotMA(const char *str)
 {
@@ -538,6 +597,8 @@ Snapshot default_stringToSnapshotMA(const char *str)
 
   return s;
 }
+
+
 
 int ctoi(const char c)
 {
