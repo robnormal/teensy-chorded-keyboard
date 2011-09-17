@@ -2,18 +2,24 @@
 
 /***** MAIN PROCESSES BELOW HERE *****/
 
+void setupLayout()
+{
+	layoutAddChar( "0200", KEY_SPACE );
+	layoutAddChar( "0100", 'e' );
+	layoutAddChar( "1000", 't' );
+	layoutAddMod(  "1100", MODIFIERKEY_CTRL );
+}
+
 SwitchHistory *history_GLOBAL;
 
 void setup() {
   // this allocation is never freed
   history_GLOBAL = newHistoryA();
 
-	// TODO: create LAYOUT from config
-  if (NULL == stringToSnapshotMA) {
-    stringToSnapshotMA = &default_stringToSnapshotMA;
-  }
+  // LAYOUT = loadLayoutA(layoutString(), stringToSnapshotMA);
+	LAYOUT = newLayoutA();
 
-  LAYOUT = loadLayoutA(layoutString(), stringToSnapshotMA);
+	setupLayout();
 }
 
 void loop() {

@@ -94,7 +94,6 @@ typedef struct {
 
 
 Layout *LAYOUT; // treat as constant once created
-Snapshot (*stringToSnapshotMA)(const char *str) = NULL;  // only set once
 
 // REMOVE for use in Teensyduino
 int digitalRead(int x);
@@ -155,9 +154,13 @@ Snapshot readInputsAIO ();
 void     sendKeyIO     (const Key *k);
 void     sendOutputIO  (const Output *oM);
 
-Layout   *loadLayoutA      (char *str, Snapshot (*toChordMA)(const char *str));
 Output   *stringToOutputMA (const char *str);
 Layout   *addToLayoutA     (Snapshot s, Output *o, Layout *l);
+Layout   *layoutAddChar    (const char *chordstr, const char c);
+Layout   *layoutAddString  (const char *chordstr, const char *str);
+Layout   *layoutAddMod     (const char *chordstr, const char mod);
+Layout   *layoutAddCharMod (const char *chordstr, const char c, const char mod);
+Layout   *layoutAddOutput  (const char *chordstr, Output *o);
 
 
 
@@ -501,58 +504,6 @@ void sendKeyIO(const Key *k)
   }
 }
 
-// +1 Snapshot M
-// +1 Output M
-Layout *loadLayoutStringsA(char * chordstrM, char *textM, Snapshot (*toChordMA)(const char *str), Layout *l)
-{
-  if (NULL != chordstrM && NULL != textM) {
-    Snapshot chordM;
-    Output *oM;
-
-    // these 2 live in LAYOUT for duration of program
-    chordM = (*toChordMA)(chordstrM); // +1 Snapshot M
-    oM     = stringToOutputMA(textM); // +1 Output M
-
-    if (NULL != chordM && NULL != oM) {
-      l = addToLayoutA(chordM, oM, l);
-    }
-  }
-
-	return l;
-}
-
-// +1 Layout
-// +N Snapshot
-// +N Output
-Layout *loadLayoutA(char *str, Snapshot (*toChordMA)(const char *str))
-{
-  char *lineM     = MALLOCS(char, 40);
-  char *chordstrM = MALLOCS(char, 8);
-  char *textM     = MALLOCS(char, 20);
-  int count = 0;
-
-  // have to copy the string or strtok seg faults
-  char newstr[500];
-  strcpy(newstr, str);
-
-	Layout *l = newLayoutA(); // +1 Layout
-
-  lineM = strtok(newstr, "\n");
-  while (NULL != lineM) {
-    sscanf(lineM, "%s %s", chordstrM, textM);
-
-    l = loadLayoutStringsA(chordstrM, textM, toChordMA, l); // +1 Snapshot M; +1 Output M
-
-    lineM = strtok(NULL, "\n");
-    ++count;
-  }
-
-
-  free(lineM); free(chordstrM); free(textM);
-
-	return l;
-}
-
 
 /*** These functions must be altered for different keyboards ***/
 Snapshot chordFromM(const SwitchHistory *h)
@@ -586,7 +537,7 @@ boole newSwitchPressed(const Snapshot a, const Snapshot b)
 }
 
 /* REQUIREMENT: str must be at least NUM_FINGERS chars long */
-Snapshot default_stringToSnapshotMA(const char *str)
+Snapshot stringToSnapshotMA(const char *str)
 {
   int i;
   Snapshot s = newSnapshotA();  // +1 Snapshot
@@ -609,39 +560,12 @@ int ctoi(const char c)
 // +1 Output
 Output *stringToOutputMA(const char *str)
 {
-  Key *k;
-
-  if (strlen(str) == 1) {
-    k = newKeyA(str[0], 0);
-  } else if (strcmp(str, "control") == 0) {
-    k = newKeyA(0, MODIFIERKEY_CTRL);
-  } else if (strcmp(str, "shift") == 0) {
-    k = newKeyA(0, MODIFIERKEY_SHIFT);
-  } else if (strcmp(str, "alt") == 0) {
-    k = newKeyA(0, MODIFIERKEY_ALT);
-  } else if (strcmp(str, "win") == 0) {
-    k = newKeyA(0, MODIFIERKEY_GUI);
-  } else if (strcmp(str, "return") == 0) {
-    k = newKeyA(KEY_ENTER, 0);
-  } else if (strcmp(str, "space") == 0) {
-    k = newKeyA(KEY_SPACE, 0);
-  } else if (strcmp(str, "backspace") == 0) {
-    k = newKeyA(KEY_BKSP, 0);
-  } else if (strcmp(str, "esc") == 0) {
-    k = newKeyA(KEY_ESC, 0);
-  } else {
-		int i, chars = strlen(str);
-		Output *o = newOutputA();
-
-		for (i = 0; i < chars; i++) {
-			addToOutput(newKeyA(str[i], 0), o);
-		}
-
-    return o;
-  }
-
   Output *o = newOutputA();
-  addToOutput(k, o);
+	int i, len = strlen(str);
+
+	for (i = 0; i < len; i++) {
+		addToOutput(newKeyA(str[i], 0), o);
+	}
 
   return o;
 }
@@ -657,4 +581,33 @@ Layout *addToLayoutA(Snapshot s, Output *o, Layout *l)
   return l;
 }
 
+Layout *layoutAddChar(const char *chordstr, const char c)
+{
+	return layoutAddOutput(chordstr, addToOutput(newKeyA(c, 0), newOutputA()));
+}
+
+Layout *layoutAddString(const char *chordstr, const char *str)
+{
+	return layoutAddOutput(chordstr, stringToOutputMA(str));
+}
+
+Layout *layoutAddMod(const char *chordstr, const char mod)
+{
+	return layoutAddOutput(chordstr, addToOutput(newKeyA(0, mod), newOutputA()));
+}
+
+Layout *layoutAddCharMod(const char *chordstr, const char c, const char mod)
+{
+	return layoutAddOutput(chordstr, addToOutput(newKeyA(c, mod), newOutputA()));
+}
+
+Layout *layoutAddOutput(const char *chordstr, Output *o)
+{
+	Snapshot s = stringToSnapshotMA(chordstr);
+
+	if (NULL != s) {
+		LAYOUT = addToLayoutA(s, o, LAYOUT);
+		return LAYOUT;
+	}
+}
 
