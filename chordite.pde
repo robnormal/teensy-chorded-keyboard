@@ -49,7 +49,7 @@ void setup() {
   history_GLOBAL = newHistoryA();
 
   LAYOUT = newLayoutA();
-  // setupLayout();
+  setupLayout();
 }
 
 
@@ -63,7 +63,7 @@ void loop() {
 
   deleteSnapshotD(current);
 
-  // sendOutputIO(r->outputM);
+  sendOutputIO(r->outputM);
 
   // set function output
   // THIS ALREADY HAPPENED - just here for reference
@@ -76,13 +76,7 @@ void loop() {
 
   free(r);
 
-/*
-  Keyboard.set_key1(KEY_Q);
-  Keyboard.send_now();
-  Keyboard.set_key1(0);
-  Keyboard.send_now();
-  */
-  Keyboard.println("u;;r");
-  delay(10);
+  // Keyboard.println("u;;r");
+  delay(100);
 }
 

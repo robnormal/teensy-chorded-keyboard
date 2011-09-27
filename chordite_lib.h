@@ -46,8 +46,8 @@ const int SWITCHES[NUM_FINGERS][2] = {
 };
 const int NUM_SWITCHES[NUM_FINGERS] = {2, 2, 2, 2}; 
 
-// chordite has 2 switches per finger, plus pressing _both_, which counts separately
-const int NUM_STATES[NUM_FINGERS] = {3, 3, 3, 3}; 
+// chordite has 2 switches per finger, plus pressing _both_, which counts separately, as does pressing _nothing_
+const int NUM_STATES[NUM_FINGERS] = {4, 4, 4, 4}; 
 
 /** END **/
 
@@ -402,7 +402,12 @@ Output *outputForM(const Snapshot sM, const SwitchHistory *h, const Layout *l)
     Snapshot chordM = chordFromM(h);
 
     if (NULL != chordM) {
-      o = l->outputs[chordIndex(chordM, l)];
+      int index = chordIndex(chordM, l);
+      if (index != -1) {
+        o = l->outputs[index];
+      } else {
+        o = NULL;
+      }
     } else {
       o = NULL;
     }
@@ -473,19 +478,13 @@ Snapshot readInputsAIO()
 
 void sendOutputIO(const Output *oM)
 {
-  /*
   if (NULL != oM) {
     int i;
 
-    char f[3];
-    f[0] = oM->count + '0';
-    f[1] = '\0';
-    Keyboard.println(f);
     for (i = 0; i < oM->count; ++i) {
-      //sendKeyIO(oM->keys[i]);
+      sendKeyIO(oM->keys[i]);
     }
   }
-  */
 }
 
 // TODO: uncomment Keyboard lines in Teensyduino
