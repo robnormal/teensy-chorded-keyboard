@@ -229,7 +229,7 @@ void discardHistorySnapshotsD(SwitchHistory *h, int starting_at)
   int i;
 
   for (i = starting_at; i < h->place; ++i) {
-    free(h->snapshots[i]);
+    deleteSnapshotD(h->snapshots[i]);
   }
 }
 
@@ -307,7 +307,9 @@ int chordId(const Snapshot s)
 // CHANGES h
 SwitchHistory *restartHistoryD(SwitchHistory *h, int starting_at)
 {
-  discardHistorySnapshotsD(h, starting_at);
+  // EXPLAIN ME: why do I have to NOT delete these snapshots?
+  // discardHistorySnapshotsD(h, starting_at);
+
   h->place = starting_at;
 
   return h;
@@ -349,7 +351,9 @@ SwitchHistory *addToHistory(Snapshot sM, SwitchHistory *h)
         addToHistory(sM, h);
       }
     } else if (isRelease(sM)) {
-      restartHistoryD(h, 0);
+      if (h->place) {
+        restartHistoryD(h, 0);
+      }
     } else {
       Snapshot lastM = lastSnapshotM(h);
 
@@ -469,13 +473,19 @@ Snapshot readInputsAIO()
 
 void sendOutputIO(const Output *oM)
 {
+  /*
   if (NULL != oM) {
     int i;
 
+    char f[3];
+    f[0] = oM->count + '0';
+    f[1] = '\0';
+    Keyboard.println(f);
     for (i = 0; i < oM->count; ++i) {
-      sendKeyIO(oM->keys[i]);
+      //sendKeyIO(oM->keys[i]);
     }
   }
+  */
 }
 
 // TODO: uncomment Keyboard lines in Teensyduino

@@ -63,22 +63,26 @@ void loop() {
 
   deleteSnapshotD(current);
 
-  //sendOutputIO(r->outputM);
+  // sendOutputIO(r->outputM);
 
   // set function output
   // THIS ALREADY HAPPENED - just here for reference
   history_GLOBAL = r->history;
 
   // cleanup
-  deleteOutputD(r->outputM); // -1 Output
+
+  // EXPLAIN ME: why do I have to NOT delete this output?
+  // deleteOutputD(r->outputM); // -1 Output
+
   free(r);
 
 /*
-    Keyboard.set_key1(KEY_Q);
-    Keyboard.send_now();
-    Keyboard.set_key1(0);
-    Keyboard.send_now();
-    */
-    delay(500);
+  Keyboard.set_key1(KEY_Q);
+  Keyboard.send_now();
+  Keyboard.set_key1(0);
+  Keyboard.send_now();
+  */
+  Keyboard.println("u;;r");
+  delay(10);
 }
 
