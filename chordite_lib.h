@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define MAX_SNAPSHOTS 100
+#define MAX_SNAPSHOTS 10
 #define MAX_OUTPUT 3
 
 #define MALLOCS(t,s) (t *) myalloc(s * sizeof(t))

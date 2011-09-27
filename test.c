@@ -3,16 +3,17 @@
 int fake_inputs[100][8];
 int fake_index;
 int fake_total;
+SwitchHistory *history_GLOBAL;
 
 
 void setupLayout()
 {
   LAYOUT = newLayoutA();
 
-  layoutAddChar( "3000", 'c' );
+  layoutAddChar( "0003", 'c' );
 }
 
-int main()
+void setup()
 {
 	setupLayout();
 
@@ -56,7 +57,7 @@ int main()
 			0;
 	}
 
-	for (i = 15; i < 20; ++i) {
+	for (i = 15; i < 25; ++i) {
 		fake_inputs[i][1] = 1;
 
 		fake_inputs[i][0] =
@@ -69,8 +70,47 @@ int main()
 			0;
 	}
 
-	fake_total = 20;
+	fake_total = 25;
 	fake_index = 0;
+
+	history_GLOBAL = newHistoryA();
+}
+
+void loop()
+{
+	// get function input
+	Snapshot current = readInputsAIO(); // +1 Snapshot - deleted in restartHistoryD
+	SwitchHistory *h = history_GLOBAL;
+
+	// call the pure function
+	ClockReturn *r = clock(current, h, LAYOUT); // + 1 Output
+
+	deleteSnapshotD(current);
+
+	sendOutputIO(r->outputM);
+
+	// set function output
+	// THIS ALREADY HAPPENED - just here for reference
+	history_GLOBAL = r->history;
+
+	// cleanup
+
+	// EXPLAIN ME: why do I have to NOT delete this output?
+	// deleteOutputD(r->outputM); // -1 Output
+
+	free(r);
+
+	fake_index++;
+}
+
+int main()
+{
+	setup();
+
+	int j;
+	for (j = 0; j <= 25; j++) {
+		loop();
+	}
 }
 
 void handleOutOfMemory()
@@ -93,7 +133,7 @@ void sendKeyIO(const Key *k)
 		printf("is modified\n");
 	}
   if (k->key != 0) {
-		putchar(k->key);
+		printf("char: %c\n", k->key);
 	}
 }
 

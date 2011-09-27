@@ -35,17 +35,9 @@ void setup() {
   Serial.begin(9600);
   delay(1000);
 
-  // read pins
-  /*
-  for (int i = 0; i < SWITCHES; i++) {
-    pinMode(SWITCH_ORDER[i], INPUT);
-  }
-  */
-
   for (int i = 0; i < 13; i++) {
     pinMode(i, INPUT);
   }
-
 
   // this allocation is never freed
   history_GLOBAL = newHistoryA();

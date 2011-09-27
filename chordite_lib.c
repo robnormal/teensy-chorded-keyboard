@@ -267,15 +267,15 @@ Output *outputForM(const Snapshot sM, const SwitchHistory *h, const Layout *l)
     if (NULL != chordM) {
       int index = chordIndex(chordM, l);
       if (index != -1) {
+      printf("we have a chord index\n");
         o = l->outputs[index];
       } else {
+      printf("we have no index\n");
         o = NULL;
       }
     } else {
       o = NULL;
     }
-
-    deleteSnapshotD(chordM);
 
     return o;
 
@@ -332,7 +332,9 @@ Snapshot readInputsAIO()
 
 void sendOutputIO(const Output *oM)
 {
+
   if (NULL != oM) {
+  printf("sendOutputIO: %i\n", oM->count);
     int i;
 
     for (i = 0; i < oM->count; ++i) {
