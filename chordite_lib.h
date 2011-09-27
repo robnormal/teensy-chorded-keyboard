@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "WProgram.h"
 
-#define MAX_SNAPSHOTS 1000
-#define MAX_OUTPUT 10
+#define MAX_SNAPSHOTS 100
+#define MAX_OUTPUT 3
 
 #define MALLOCS(t,s) (t *) myalloc(s * sizeof(t))
 #define MALLOC(t) (t *) myalloc(sizeof(t))
@@ -22,7 +23,7 @@
 
 /** KEYBOARD-SPECIFIC CONFIGURATION **/
 
-#define LAYOUT_SIZE 50
+#define LAYOUT_SIZE 25
 #define NUM_FINGERS 4
 
 #define PINKY_L 0
@@ -31,8 +32,8 @@
 #define RING_H 3
 #define MIDDLE_L 4
 #define MIDDLE_H 5
-#define INDEX_L 7
-#define INDEX_H 8
+#define INDEX_L 6
+#define INDEX_H 7
 
 #define UP LOW
 #define DOWN HIGH
@@ -43,9 +44,10 @@ const int SWITCHES[NUM_FINGERS][2] = {
   { RING_L,   RING_H   },
   { PINKY_L,  PINKY_H  }
 };
+const int NUM_SWITCHES[NUM_FINGERS] = {2, 2, 2, 2}; 
 
 // chordite has 2 switches per finger, plus pressing _both_, which counts separately
-const int NUM_SWITCHES[NUM_FINGERS] = {3, 3, 3, 3}; 
+const int NUM_STATES[NUM_FINGERS] = {3, 3, 3, 3}; 
 
 /** END **/
 
@@ -71,12 +73,12 @@ typedef struct {
 } Key;
 
 typedef struct {
-	Snapshot *snapshots;
-	int place;
+  Snapshot *snapshots;
+  int place;
 } SwitchHistory;
 
 typedef struct {
-	Key **keys;
+  Key **keys;
   int count;
 } Output;
 
@@ -88,31 +90,12 @@ typedef struct {
 } Layout;
 
 typedef struct {
-	SwitchHistory *history;
-	Output *outputM;
+  SwitchHistory *history;
+  Output *outputM;
 } ClockReturn;
 
 
 Layout *LAYOUT; // treat as constant once created
-
-// REMOVE for use in Teensyduino
-int digitalRead(int x);
-int digitalRead(int x) {
-  return 0;
-}
-#define MODIFIERKEY_CTRL 1
-#define MODIFIERKEY_SHIFT 2
-#define MODIFIERKEY_ALT 3
-#define MODIFIERKEY_GUI 4
-#define KEY_ENTER 2
-#define KEY_SPACE 3
-#define KEY_ESC 4
-#define KEY_BKSP 5
-
-
-
-
-
 
 int ctoi(const char c);
 
@@ -122,7 +105,7 @@ void *myalloc(int size);
 Key           *newKeyA     (const int key, const int modifier);
 Snapshot      newSnapshotA ();
 SwitchHistory *newHistoryA ();
-Output        *newOutputA  ();
+Output        *newOutputA  (const int num_keys);
 Layout        *newLayoutA  ();
 
 void deleteSnapshotD          (Snapshot sM);
@@ -162,6 +145,8 @@ Layout   *layoutAddMod     (const char *chordstr, const char mod);
 Layout   *layoutAddCharMod (const char *chordstr, const char c, const char mod);
 Layout   *layoutAddOutput  (const char *chordstr, Output *o);
 
+int charToCode(const char c);
+
 
 
 Snapshot copySnapshotA(const Snapshot s)
@@ -178,18 +163,18 @@ Snapshot copySnapshotA(const Snapshot s)
 
 void handleOutOfMemory()
 {
-	exit(1);
+  Keyboard.println("out of memory");
 }
 
 void *myalloc(int size)
 {
-	void *x = malloc(size);
+  void *x = malloc(size);
 
-	if (NULL == x) {
-		handleOutOfMemory();
-	}
+  if (NULL == x) {
+    handleOutOfMemory();
+  }
 
-	return x;
+  return x;
 }
 
 
@@ -206,9 +191,9 @@ Key *newKeyA(const int key, const int modifier)
 
 Snapshot newSnapshotA()
 {
-	Snapshot s = MALLOCS(FingerState, NUM_FINGERS);
+  Snapshot s = MALLOCS(FingerState, NUM_FINGERS);
 
-	return s;
+  return s;
 }
 
 void deleteSnapshotD(Snapshot sM)
@@ -220,12 +205,12 @@ void deleteSnapshotD(Snapshot sM)
 
 SwitchHistory *newHistoryA()
 {
-	SwitchHistory *h = MALLOC(SwitchHistory);
+  SwitchHistory *h = MALLOC(SwitchHistory);
 
-	h->snapshots = MALLOCS(Snapshot, MAX_SNAPSHOTS);
-	h->place = 0;
+  h->snapshots = MALLOCS(Snapshot, MAX_SNAPSHOTS);
+  h->place = 0;
 
-	return h;
+  return h;
 }
 
 void deleteHistoryD(SwitchHistory *hM)
@@ -248,13 +233,13 @@ void discardHistorySnapshotsD(SwitchHistory *h, int starting_at)
   }
 }
 
-Output *newOutputA()
+Output *newOutputA(const int num_keys)
 {
-	Output *o = MALLOC(Output);
-	o->keys   = MALLOCS(Key *,MAX_OUTPUT);
-	o->count  = 0;
+  Output *o = MALLOC(Output);
+  o->keys   = MALLOCS(Key *, num_keys);
+  o->count  = 0;
 
-	return o;
+  return o;
 }
 
 void deleteOutputD(Output *oM)
@@ -268,20 +253,20 @@ void deleteOutputD(Output *oM)
 
 Layout *newLayoutA()
 {
-	Layout *l  = MALLOC(Layout);
-	l->ids     = MALLOCS(int, LAYOUT_SIZE);
-	l->outputs = MALLOCS(Output *, LAYOUT_SIZE);
-	l->chords  = MALLOCS(Snapshot, LAYOUT_SIZE);
-	l->count   = 0;
+  Layout *l  = MALLOC(Layout);
+  l->ids     = MALLOCS(int, LAYOUT_SIZE);
+  l->outputs = MALLOCS(Output *, LAYOUT_SIZE);
+  l->chords  = MALLOCS(Snapshot, LAYOUT_SIZE);
+  l->count   = 0;
 
-	return l;
+  return l;
 }
 
 
 
 boole historyIsEmpty(const SwitchHistory *h)
 {
-	return 0 == h->place;
+  return 0 == h->place;
 }
 
 // All switches have been released?
@@ -300,19 +285,19 @@ boole isRelease(const Snapshot s)
 
 boole historyTooLong(const SwitchHistory *h)
 {
-	return h->place >= MAX_SNAPSHOTS;
+  return h->place >= MAX_SNAPSHOTS;
 }
 
 int chordId(const Snapshot s)
 {
   int i, multiplier = 1, id = 0;
 
-	// number-base style, this forms unique IDS using the smallest possible integers
+  // number-base style, this forms unique IDS using the smallest possible integers
   for (i = 0; i < NUM_FINGERS; ++i) {
-		id += s[i] * multiplier;
+    id += s[i] * multiplier;
 
-		multiplier *= NUM_SWITCHES[i];
-	}
+    multiplier *= NUM_STATES[i];
+  }
 
   return id;
 }
@@ -323,17 +308,17 @@ int chordId(const Snapshot s)
 SwitchHistory *restartHistoryD(SwitchHistory *h, int starting_at)
 {
   discardHistorySnapshotsD(h, starting_at);
-	h->place = starting_at;
+  h->place = starting_at;
 
-	return h;
+  return h;
 }
 
 Snapshot lastSnapshotM(const SwitchHistory *h) {
-	if (historyIsEmpty(h)) {
-		return NULL;
-	} else {
-		return h->snapshots[h->place - 1];
-	}
+  if (historyIsEmpty(h)) {
+    return NULL;
+  } else {
+    return h->snapshots[h->place - 1];
+  }
 }
 
 /**
@@ -351,34 +336,34 @@ Snapshot lastSnapshotM(const SwitchHistory *h) {
 // CHANGES h
 SwitchHistory *addToHistory(Snapshot sM, SwitchHistory *h)
 {
-	if (sM != NULL) {
-		if (historyTooLong(h)) {
-			Snapshot new_firstM = chordFromM(h);
+  if (sM != NULL) {
+    if (historyTooLong(h)) {
+      Snapshot new_firstM = chordFromM(h);
 
-			if (NULL == new_firstM) {
-				restartHistoryD(h, 0);
-			} else {
-				// copy chord, because it may be free()d when we restartHistoryD
-				h->snapshots[0] = copySnapshotA(new_firstM);
-				restartHistoryD(h, 1);
-				addToHistory(sM, h);
-			}
-		} else if (isRelease(sM)) {
-			restartHistoryD(h, 0);
-		} else {
-			Snapshot lastM = lastSnapshotM(h);
+      if (NULL == new_firstM) {
+        restartHistoryD(h, 0);
+      } else {
+        // copy chord, because it may be free()d when we restartHistoryD
+        h->snapshots[0] = copySnapshotA(new_firstM);
+        restartHistoryD(h, 1);
+        addToHistory(sM, h);
+      }
+    } else if (isRelease(sM)) {
+      restartHistoryD(h, 0);
+    } else {
+      Snapshot lastM = lastSnapshotM(h);
 
-			if (NULL != lastM && newSwitchPressed(lastM, sM)) {
-				restartHistoryD(h, 0);
-				addToHistory(sM, h);
-			} else {
-				h->snapshots[h->place] = copySnapshotA(sM); // +1 Snapshot
-				h->place++;
-			}
-		}
-	}
+      if (NULL != lastM && newSwitchPressed(lastM, sM)) {
+        restartHistoryD(h, 0);
+        addToHistory(sM, h);
+      } else {
+        h->snapshots[h->place] = copySnapshotA(sM); // +1 Snapshot
+        h->place++;
+      }
+    }
+  }
 
-	return h;
+  return h;
 }
 
 // Silently does nothing if o is already at max size
@@ -408,12 +393,12 @@ int chordIndex(const Snapshot s, const Layout *l)
 
 Output *outputForM(const Snapshot sM, const SwitchHistory *h, const Layout *l)
 {
-	if (NULL != sM && isRelease(sM)) {
-		Output *o;
-		Snapshot chordM = chordFromM(h);
+  if (NULL != sM && isRelease(sM)) {
+    Output *o;
+    Snapshot chordM = chordFromM(h);
 
-		if (NULL != chordM) {
-			o = l->outputs[chordIndex(chordM, l)];
+    if (NULL != chordM) {
+      o = l->outputs[chordIndex(chordM, l)];
     } else {
       o = NULL;
     }
@@ -422,34 +407,42 @@ Output *outputForM(const Snapshot sM, const SwitchHistory *h, const Layout *l)
 
     return o;
 
-	} else {
-		return NULL;
-	}
+  } else {
+    return NULL;
+  }
 }
 
 
 
 ClockReturn *clockReturn(SwitchHistory *h, Output *oM)
 {
-	ClockReturn *cr = MALLOC(ClockReturn);
+  ClockReturn *cr = MALLOC(ClockReturn);
 
   cr->history = h;
   cr->outputM = oM;
 
-	return cr;
+  return cr;
 }
 
 ClockReturn *clock(Snapshot currentM, SwitchHistory *history, Layout *l)
 {
-	SwitchHistory *new_h;
-	Output *oM;
+  SwitchHistory *new_h;
+  Output *oM;
 
-	oM    = outputForM(currentM, history, l);
-	new_h = addToHistory(currentM, history);
+  oM    = outputForM(currentM, history, l);
+  new_h = addToHistory(currentM, history);
 
-	return clockReturn(new_h, oM);
+  return clockReturn(new_h, oM);
 }
 
+int readPinIO(int pin)
+{
+  pinMode(pin, OUTPUT);
+  digitalWrite(pin, HIGH);
+  pinMode(pin, INPUT);
+
+  return HIGH == digitalRead(pin) ? HIGH : LOW;
+}
 
 // +1 Snapshot
 Snapshot readInputsAIO()
@@ -459,48 +452,80 @@ Snapshot readInputsAIO()
 
   Snapshot s = newSnapshotA();  // +1 Snapshot
 
+
+  char XX[30];
+  int k = 0;
+  for (i = 0; i < NUM_FINGERS; ++i) {
+    for (j = 0; j < NUM_SWITCHES[i]; ++j) {
+      XX[k] = HIGH == readPinIO(SWITCHES[i][j]) ? '0' : '_';
+      k++;
+    }
+  }
+  XX[k] = '\0';
+  Keyboard.println(XX);
+
   for (i = 0; i < NUM_FINGERS; ++i) {
     state = 0;
 
-    for (j = 0; j < NUM_SWITCHES[j]; ++j) {
+    for (j = 0; j < NUM_SWITCHES[i]; ++j) {
       // shift by 1, put new bit at end
-      state  = state << 1 + digitalRead(SWITCHES[i][j]);
+      state  = state << 1 + readPinIO(SWITCHES[i][j]);
     }
 
     s[i] = state;
   }
+  /*
+  sscanf(XX,
+ "Reads: %i %i %i %i %i %i %i %i %i %i %i %i %i",
+ (HIGH == digitalRead(0)) ? 1 : 0,
+ (HIGH == digitalRead(1)) ? 1 : 0,
+ (HIGH == digitalRead(2)) ? 1 : 0,
+ (HIGH == digitalRead(3)) ? 1 : 0,
+ (HIGH == digitalRead(4)) ? 1 : 0,
+ (HIGH == digitalRead(5)) ? 1 : 0,
+ (HIGH == digitalRead(6)) ? 1 : 0,
+ (HIGH == digitalRead(7)) ? 1 : 0,
+ (HIGH == digitalRead(8)) ? 1 : 0,
+ (HIGH == digitalRead(9)) ? 1 : 0,
+ (HIGH == digitalRead(10)) ? 1 : 0,
+ (HIGH == digitalRead(11)) ? 1 : 0,
+ (HIGH == digitalRead(12)) ? 1 : 0);
+  Keyboard.println(XX);
+  free(XX);
+  */
 
+  
   return s;
 }
 
 void sendOutputIO(const Output *oM)
 {
-	if (NULL != oM) {
+  if (NULL != oM) {
     int i;
 
     for (i = 0; i < oM->count; ++i) {
       sendKeyIO(oM->keys[i]);
     }
-	}
+  }
 }
 
 // TODO: uncomment Keyboard lines in Teensyduino
 void sendKeyIO(const Key *k)
 {
   if (k->modifier != 0) {
-    // Keyboard.set_modifier(k->modifier);
+    Keyboard.set_modifier(k->modifier);
   }
   if (k->key != 0) {
-    // Keyboard.set_key1(k->key);
+    Keyboard.set_key1(k->key);
   }
 
   if (k->key != 0 || k->modifier != 0) {
     // press the key
-    // Keyboard.send_now();
+    Keyboard.send_now();
 
     // release the key
-    // Keyboard.set_key1(0);
-    // Keyboard.send_now();
+    Keyboard.set_key1(0);
+    Keyboard.send_now();
   }
 }
 
@@ -508,32 +533,32 @@ void sendKeyIO(const Key *k)
 /*** These functions must be altered for different keyboards ***/
 Snapshot chordFromM(const SwitchHistory *h)
 {
-	if (h->place == 0) {
-		return NULL;
-	} else {
-		return h->snapshots[0];
-	}
+  if (h->place == 0) {
+    return NULL;
+  } else {
+    return h->snapshots[0];
+  }
 }
 
 boole newSwitchPressed(const Snapshot a, const Snapshot b)
 {
-	int i;
+  int i;
 
-	// these are the rules for the chordite
-	// 3 -> * = no
-	// 2 -> {0|2} = no
-	// 1 -> {0|1} = no
-	// 0 -> {0|0} = no
-	// otherwise  = yes
-	for (i = 0; i < NUM_FINGERS; i++) {
-		if ( b[i] > a[i]
-		  || (a[i] == 2 && b[i] == 1)
-		) {
-			return TRUE;
-		}
-	}
+  // these are the rules for the chordite
+  // 3 -> * = no
+  // 2 -> {0|2} = no
+  // 1 -> {0|1} = no
+  // 0 -> {0|0} = no
+  // otherwise  = yes
+  for (i = 0; i < NUM_FINGERS; i++) {
+    if ( b[i] > a[i]
+      || (a[i] == 2 && b[i] == 1)
+    ) {
+      return TRUE;
+    }
+  }
 
-	return FALSE;
+  return FALSE;
 }
 
 /* REQUIREMENT: str must be at least NUM_FINGERS chars long */
@@ -560,12 +585,12 @@ int ctoi(const char c)
 // +1 Output
 Output *stringToOutputMA(const char *str)
 {
-  Output *o = newOutputA();
-	int i, len = strlen(str);
+  int i, len = strlen(str);
+  Output *o = newOutputA(len);
 
-	for (i = 0; i < len; i++) {
-		addToOutput(newKeyA(str[i], 0), o);
-	}
+  for (i = 0; i < len; i++) {
+    addToOutput(newKeyA(str[i], 0), o);
+  }
 
   return o;
 }
@@ -583,31 +608,109 @@ Layout *addToLayoutA(Snapshot s, Output *o, Layout *l)
 
 Layout *layoutAddChar(const char *chordstr, const char c)
 {
-	return layoutAddOutput(chordstr, addToOutput(newKeyA(c, 0), newOutputA()));
+  return layoutAddOutput(chordstr, addToOutput(newKeyA(charToCode(c), 0), newOutputA(1)));
 }
 
 Layout *layoutAddString(const char *chordstr, const char *str)
 {
-	return layoutAddOutput(chordstr, stringToOutputMA(str));
+  return layoutAddOutput(chordstr, stringToOutputMA(str));
 }
 
 Layout *layoutAddMod(const char *chordstr, const char mod)
 {
-	return layoutAddOutput(chordstr, addToOutput(newKeyA(0, mod), newOutputA()));
+  return layoutAddOutput(chordstr, addToOutput(newKeyA(0, mod), newOutputA(1)));
 }
 
 Layout *layoutAddCharMod(const char *chordstr, const char c, const char mod)
 {
-	return layoutAddOutput(chordstr, addToOutput(newKeyA(c, mod), newOutputA()));
+  return layoutAddOutput(chordstr, addToOutput(newKeyA(charToCode(c), mod), newOutputA(1)));
 }
 
 Layout *layoutAddOutput(const char *chordstr, Output *o)
 {
-	Snapshot s = stringToSnapshotMA(chordstr);
+  Snapshot s = stringToSnapshotMA(chordstr);
 
-	if (NULL != s) {
-		LAYOUT = addToLayoutA(s, o, LAYOUT);
-		return LAYOUT;
-	}
+  if (NULL != s) {
+    LAYOUT = addToLayoutA(s, o, LAYOUT);
+    return LAYOUT;
+  }
+}
+
+int charToCode(const char c)
+{
+  if ('a' <= c && c <= 'z') {
+    return c - ('a' - KEY_A);
+  } else if ('0' <= c && c <= '9') {
+    return c - ('0' - KEY_0);
+  } else {
+    switch (c) {
+    case '-':
+      return KEY_MINUS;
+    case '=':
+      return KEY_EQUAL;
+    case '[':
+      return KEY_LEFT_BRACE;
+    case ']':
+      return KEY_RIGHT_BRACE;
+    case '\\':
+      return KEY_BACKSLASH;
+    case ';':
+      return KEY_SEMICOLON;
+    case '\'':
+      return KEY_QUOTE;
+    case '`':
+      return KEY_TILDE;
+    case ',':
+      return KEY_COMMA;
+    case '.':
+      return KEY_PERIOD;
+    case '/':
+      return KEY_SLASH;
+    case '!':
+      return ASCII_21;
+    case '"':
+      return ASCII_22;
+    case '#':
+      return ASCII_23;
+    case '$':
+      return ASCII_24;
+    case '%':
+      return ASCII_25;
+    case '&':
+      return ASCII_26;
+    case '(':
+      return ASCII_28;
+    case ')':
+      return ASCII_29;
+    case '*':
+      return ASCII_2A;
+    case '+':
+      return ASCII_2B;
+    case ':':
+      return ASCII_3A;
+    case '<':
+      return ASCII_3C;
+    case '>':
+      return ASCII_3E;
+    case '?':
+      return ASCII_3F;
+    case '@':
+      return ASCII_40;
+    case '^':
+      return ASCII_5E;
+    case '_':
+      return ASCII_5F;
+    case '{':
+      return ASCII_7B;
+    case '|':
+      return ASCII_7C;
+    case '}':
+      return ASCII_7D;
+    case '~':
+      return ASCII_7E;
+    default:
+      return c;
+    }
+  }
 }
 
