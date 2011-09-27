@@ -4,6 +4,8 @@
 
 void setupLayout()
 {
+  LAYOUT = newLayoutA();
+
   layoutAddChar( "0200", KEY_SPACE );
   layoutAddChar( "0100", KEY_E );
   layoutAddChar( "1000", KEY_T );
@@ -48,7 +50,6 @@ void setup() {
   // this allocation is never freed
   history_GLOBAL = newHistoryA();
 
-  LAYOUT = newLayoutA();
   setupLayout();
 }
 
