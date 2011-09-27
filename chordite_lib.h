@@ -453,48 +453,17 @@ Snapshot readInputsAIO()
   Snapshot s = newSnapshotA();  // +1 Snapshot
 
 
-  char XX[30];
-  int k = 0;
-  for (i = 0; i < NUM_FINGERS; ++i) {
-    for (j = 0; j < NUM_SWITCHES[i]; ++j) {
-      XX[k] = HIGH == readPinIO(SWITCHES[i][j]) ? '0' : '_';
-      k++;
-    }
-  }
-  XX[k] = '\0';
-  Keyboard.println(XX);
-
   for (i = 0; i < NUM_FINGERS; ++i) {
     state = 0;
 
     for (j = 0; j < NUM_SWITCHES[i]; ++j) {
       // shift by 1, put new bit at end
-      state  = state << 1 + readPinIO(SWITCHES[i][j]);
+      state = state*2 + readPinIO(SWITCHES[i][j]);
     }
 
     s[i] = state;
   }
-  /*
-  sscanf(XX,
- "Reads: %i %i %i %i %i %i %i %i %i %i %i %i %i",
- (HIGH == digitalRead(0)) ? 1 : 0,
- (HIGH == digitalRead(1)) ? 1 : 0,
- (HIGH == digitalRead(2)) ? 1 : 0,
- (HIGH == digitalRead(3)) ? 1 : 0,
- (HIGH == digitalRead(4)) ? 1 : 0,
- (HIGH == digitalRead(5)) ? 1 : 0,
- (HIGH == digitalRead(6)) ? 1 : 0,
- (HIGH == digitalRead(7)) ? 1 : 0,
- (HIGH == digitalRead(8)) ? 1 : 0,
- (HIGH == digitalRead(9)) ? 1 : 0,
- (HIGH == digitalRead(10)) ? 1 : 0,
- (HIGH == digitalRead(11)) ? 1 : 0,
- (HIGH == digitalRead(12)) ? 1 : 0);
-  Keyboard.println(XX);
-  free(XX);
-  */
 
-  
   return s;
 }
 
