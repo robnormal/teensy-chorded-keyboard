@@ -101,6 +101,10 @@ void loop()
 	free(r);
 
 	fake_index++;
+	if (fake_index > fake_total + 5) {
+		// restart cycle
+		fake_index = 0;
+	}
 }
 
 int main()
@@ -108,7 +112,7 @@ int main()
 	setup();
 
 	int j;
-	for (j = 0; j <= 25; j++) {
+	for (j = 0; j <= 100000; j++) {
 		loop();
 	}
 }

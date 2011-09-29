@@ -1,6 +1,11 @@
 #ifndef CHORDITE_LIB
 #define CHORDITE_LIB
 
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 #define MAX_SNAPSHOTS 10
 #define MAX_OUTPUT 3
 
@@ -129,6 +134,5 @@ void sendKeyIO         (const Key *k);
 int  readPinIO         (int pin);
 int  charToCode        (const char c);
 
-void putss(const char *c);
 #endif
 

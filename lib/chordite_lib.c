@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "chordite_lib.h"
+#include "test/chordite_lib.c"
 
 const int SWITCHES[NUM_FINGERS][2] = {
   { INDEX_L,  INDEX_H  }, 
@@ -16,6 +17,19 @@ const int NUM_STATES[NUM_FINGERS] = {4, 4, 4, 4};
 
 /** END **/
 
+
+Snapshot copySnapshotA(const Snapshot s)
+{
+  Snapshot s_new = newSnapshotA();
+  int i;
+
+  for (i = 0; i < NUM_FINGERS; ++i) {
+    s_new[i] = s[i];
+  }
+
+  return s_new;
+}
+
 void *myalloc(int size)
 {
   void *x = malloc(size);
@@ -26,6 +40,7 @@ void *myalloc(int size)
 
   return x;
 }
+
 
 // Never deleted - these live in LAYOUT for duration of program
 Key *newKeyA(const int key, const int modifier)
@@ -50,18 +65,6 @@ void deleteSnapshotD(Snapshot sM)
   if (NULL != sM) {
     free(sM);
   }
-}
-
-Snapshot copySnapshotA(const Snapshot s)
-{
-  Snapshot s_new = newSnapshotA();
-  int i;
-
-  for (i = 0; i < NUM_FINGERS; ++i) {
-    s_new[i] = s[i];
-  }
-
-  return s_new;
 }
 
 SwitchHistory *newHistoryA()
@@ -122,6 +125,7 @@ Layout *newLayoutA()
 
   return l;
 }
+
 
 
 boole historyIsEmpty(const SwitchHistory *h)
@@ -279,6 +283,8 @@ Output *outputForM(const Snapshot sM, const SwitchHistory *h, const Layout *l)
   }
 }
 
+
+
 ClockReturn *clockReturn(SwitchHistory *h, Output *oM)
 {
   ClockReturn *cr = MALLOC(ClockReturn);
@@ -300,6 +306,40 @@ ClockReturn *clock(Snapshot currentM, SwitchHistory *history, Layout *l)
   return clockReturn(new_h, oM);
 }
 
+// +1 Snapshot
+Snapshot readInputsAIO()
+{
+  int i, j;
+  FingerState state;
+
+  Snapshot s = newSnapshotA();  // +1 Snapshot
+
+
+  for (i = 0; i < NUM_FINGERS; ++i) {
+    state = 0;
+
+    for (j = 0; j < NUM_SWITCHES[i]; ++j) {
+      // shift by 1, put new bit at end
+      state = state*2 + readPinIO(SWITCHES[i][j]);
+    }
+
+    s[i] = state;
+  }
+
+  return s;
+}
+
+void sendOutputIO(const Output *oM)
+{
+
+  if (NULL != oM) {
+    int i;
+
+    for (i = 0; i < oM->count; ++i) {
+      sendKeyIO(oM->keys[i]);
+    }
+  }
+}
 
 /*** These functions must be altered for different keyboards ***/
 Snapshot chordFromM(const SwitchHistory *h)
@@ -377,14 +417,9 @@ Layout *addToLayoutA(Snapshot s, Output *o, Layout *l)
   return l;
 }
 
-Layout *layoutAddKeyCode(const char *chordstr, const int k)
-{
-  return layoutAddOutput(chordstr, addToOutput(newKeyA(k, 0), newOutputA(1)));
-}
-
 Layout *layoutAddChar(const char *chordstr, const char c)
 {
-  return layoutAddKeyCode(chordstr, charToCode(c));
+  return layoutAddOutput(chordstr, addToOutput(newKeyA(charToCode(c), 0), newOutputA(1)));
 }
 
 Layout *layoutAddString(const char *chordstr, const char *str)
@@ -411,40 +446,4 @@ Layout *layoutAddOutput(const char *chordstr, Output *o)
     return LAYOUT;
   }
 }
-
-// +1 Snapshot
-Snapshot readInputsAIO()
-{
-  int i, j;
-  FingerState state;
-
-  Snapshot s = newSnapshotA();  // +1 Snapshot
-
-
-  for (i = 0; i < NUM_FINGERS; ++i) {
-    state = 0;
-
-    for (j = 0; j < NUM_SWITCHES[i]; ++j) {
-      // shift by 1, put new bit at end
-      state = state*2 + readPinIO(SWITCHES[i][j]);
-    }
-
-    s[i] = state;
-  }
-
-  return s;
-}
-
-void sendOutputIO(const Output *oM)
-{
-
-  if (NULL != oM) {
-    int i;
-
-    for (i = 0; i < oM->count; ++i) {
-      sendKeyIO(oM->keys[i]);
-    }
-  }
-}
-
 

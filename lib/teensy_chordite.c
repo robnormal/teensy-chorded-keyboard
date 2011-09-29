@@ -1,4 +1,5 @@
-#include "WProgram.h"
+#include <WProgram.h>
+#include "chordite_lib.h"
 
 void handleOutOfMemory()
 {
