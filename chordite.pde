@@ -16,21 +16,23 @@ void handleOutOfMemory()
 
 void sendKeyIO(const Key *k)
 {
-  if (k->modifier != 0) {
-    Keyboard.set_modifier(k->modifier);
-  }
   if (k->key != 0) {
-    Keyboard.set_key1(k->key);
-  }
+    // press modifier
+    if (k->modifier != 0) {
+      Keyboard.set_modifier(k->modifier);
+      Keyboard.send_now();
+    }
 
-  if (k->key != 0 || k->modifier != 0) {
     // press the key
+    Keyboard.set_key1(k->key);
     Keyboard.send_now();
 
     // release the key
+    Keyboard.set_modifier(0);
     Keyboard.set_key1(0);
     Keyboard.send_now();
   }
+
 }
 
 int readPinIO(int pin)
@@ -170,15 +172,13 @@ void setupLayout()
   layoutAddChar( "3200", '?' );
 
   // layoutAddChar( "0330", '?' ); // SHIFT
-  // layoutAddMod("0330", MODIFIERKEY_SHIFT );
-  // layoutAddMod("0110", MODIFIERKEY_CTRL );
-  layoutAddChar("0110", 224 ); // ctrl
+  layoutAddMod("0330", MODIFIERKEY_SHIFT );
+  layoutAddMod("0110", MODIFIERKEY_CTRL );
+  // layoutAddKeyCode("0110", 74 ); // ctrl
 
 }
 
-SwitchHistory *history_GLOBAL;
 
-Key *mine;
 void setup() {
   Serial.begin(9600);
   delay(1000);
@@ -213,7 +213,7 @@ void loop() {
 
   deleteSnapshotD(current);
 
-  sendOutputIO(r->outputM);
+  modifier_GLOBAL = sendOutputIO(r->outputM, modifier_GLOBAL);
 
   // set function output
   // THIS ALREADY HAPPENED - just here for reference

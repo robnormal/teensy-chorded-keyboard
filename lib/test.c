@@ -23,7 +23,7 @@ void deleteLayoutD(Layout *l)
 }
 
 
-int fake_inputs[100][8];
+int fake_inputs[1000][8];
 int fake_index;
 int fake_total;
 SwitchHistory *history_GLOBAL;
@@ -34,15 +34,16 @@ void setupLayout()
   LAYOUT = newLayoutA();
 
   layoutAddChar( "0003", 'c' );
+  layoutAddMod ( "2000", 1 );
 }
 
 void setup()
 {
 	setupLayout();
 
-	int i;
+	int i, unit = 25;
 
-	for (i = 0; i < 5; ++i) {
+	for (i = 0; i < unit; ++i) {
 		fake_inputs[i][0] = 
 		fake_inputs[i][1] = 
 		fake_inputs[i][2] = 
@@ -54,7 +55,7 @@ void setup()
 			0;
 	}
 
-	for (i = 5; i < 10; ++i) {
+	for (i = unit; i < unit * 2; ++i) {
 		fake_inputs[i][0] = 1;
 
 		fake_inputs[i][1] = 
@@ -67,7 +68,7 @@ void setup()
 			0;
 	}
 
-	for (i = 10; i < 15; ++i) {
+	for (i = 2*unit; i < 3*unit; ++i) {
 		fake_inputs[i][0] = 1;
 		fake_inputs[i][1] = 1;
 
@@ -80,7 +81,7 @@ void setup()
 			0;
 	}
 
-	for (i = 15; i < 25; ++i) {
+	for (i = 3*unit; i < 4*unit; ++i) {
 		fake_inputs[i][1] = 1;
 
 		fake_inputs[i][0] =
@@ -93,7 +94,103 @@ void setup()
 			0;
 	}
 
-	fake_total = 25;
+  printf("show 'c':\n");
+
+	for (i = 4*unit; i < 5*unit; ++i) {
+		fake_inputs[i][0] =
+		fake_inputs[i][1] =
+		fake_inputs[i][2] = 
+		fake_inputs[i][3] = 
+		fake_inputs[i][4] = 
+		fake_inputs[i][5] = 
+		fake_inputs[i][6] = 
+		fake_inputs[i][7] = 
+			0;
+	}
+
+  // SHIFT
+	for (i = 5*unit; i < 6*unit; ++i) {
+		fake_inputs[i][6] = 1;
+
+		fake_inputs[i][0] =
+		fake_inputs[i][1] =
+		fake_inputs[i][2] = 
+		fake_inputs[i][3] = 
+		fake_inputs[i][4] = 
+		fake_inputs[i][5] = 
+		fake_inputs[i][7] = 
+			0;
+	}
+
+	for (i = 6*unit; i < 7*unit; ++i) {
+		fake_inputs[i][0] =
+		fake_inputs[i][1] =
+		fake_inputs[i][2] = 
+		fake_inputs[i][3] = 
+		fake_inputs[i][4] = 
+		fake_inputs[i][5] = 
+		fake_inputs[i][6] = 
+		fake_inputs[i][7] =
+			0;
+	}
+
+  // c again - should be capital this time
+	for (i = 7*unit; i < 8*unit; ++i) {
+		fake_inputs[i][0] = 1;
+		fake_inputs[i][1] = 1;
+
+		fake_inputs[i][2] = 
+		fake_inputs[i][3] = 
+		fake_inputs[i][4] = 
+		fake_inputs[i][5] = 
+		fake_inputs[i][6] = 
+		fake_inputs[i][7] = 
+			0;
+	}
+
+  printf("show 'C':\n");
+
+	for (i = 8*unit; i < 9*unit; ++i) {
+		fake_inputs[i][0] =
+		fake_inputs[i][1] =
+		fake_inputs[i][2] = 
+		fake_inputs[i][3] = 
+		fake_inputs[i][4] = 
+		fake_inputs[i][5] = 
+		fake_inputs[i][6] = 
+		fake_inputs[i][7] = 
+			0;
+	}
+
+  // c one last time - should no longer be capital
+	for (i = 9*unit; i < 10*unit; ++i) {
+		fake_inputs[i][0] = 1;
+		fake_inputs[i][1] = 1;
+
+		fake_inputs[i][2] = 
+		fake_inputs[i][3] = 
+		fake_inputs[i][4] = 
+		fake_inputs[i][5] = 
+		fake_inputs[i][6] = 
+		fake_inputs[i][7] = 
+			0;
+	}
+
+  printf("show 'c' again:\n");
+
+	for (i = 10*unit; i < 11*unit; ++i) {
+		fake_inputs[i][0] =
+		fake_inputs[i][1] =
+		fake_inputs[i][2] = 
+		fake_inputs[i][3] = 
+		fake_inputs[i][4] = 
+		fake_inputs[i][5] = 
+		fake_inputs[i][6] = 
+		fake_inputs[i][7] = 
+			0;
+	}
+
+	fake_total = 11*unit;
 	fake_index = 0;
 
 	history_GLOBAL = newHistoryA();
@@ -110,7 +207,7 @@ void loop()
 
 	deleteSnapshotD(current);
 
-	sendOutputIO(r->outputM);
+  modifier_GLOBAL = sendOutputIO(r->outputM, modifier_GLOBAL);
 
 	// set function output
 	// THIS ALREADY HAPPENED - just here for reference
@@ -124,7 +221,7 @@ void loop()
 	free(r);
 
 	fake_index++;
-	if (fake_index > fake_total + 5) {
+	if (fake_index >= fake_total) {
 		// restart cycle
 		fake_index = 0;
 	}
@@ -135,7 +232,7 @@ int main()
 	setup();
 
 	int j;
-	for (j = 0; j <= 100000; j++) {
+	for (j = 0; j < fake_total; j++) {
 		loop();
 	}
 
@@ -159,11 +256,11 @@ int readPinIO(int pin)
 
 void sendKeyIO(const Key *k)
 {
-  if (k->modifier != 0) {
-		//printf("is modified\n");
-	}
   if (k->key != 0) {
-		// printf("char: %c\n", k->key);
+    if (k->modifier != 0) {
+      printf("is modified: ");
+    }
+		printf("char: %c\n", k->key);
 	}
 }
 

@@ -107,7 +107,7 @@ ClockReturn *clockReturn (SwitchHistory *history, Output *output);
 ClockReturn *clock       (Snapshot currentM, SwitchHistory *history, Layout *l);
 
 Snapshot readInputsAIO ();
-void     sendOutputIO  (const Output *oM);
+int      sendOutputIO  (const Output *oM, int modifier);
 
 Output   *stringToOutputMA (const char *str);
 Layout   *addToLayoutA     (Snapshot s, Output *o, Layout *l);
@@ -117,7 +117,10 @@ Layout   *layoutAddMod     (const char *chordstr, const char mod);
 Layout   *layoutAddCharMod (const char *chordstr, const char c, const char mod);
 Layout   *layoutAddOutput  (const char *chordstr, Output *o);
 
-Layout *LAYOUT; // treat as constant once created
+/** GLOBALS **/
+Layout        *LAYOUT; // treat as constant once created
+SwitchHistory *history_GLOBAL;
+int           modifier_GLOBAL; // context modifier - can be left over from last chord release
 
 /**
  * These are NOT defined in chordite_lib.c

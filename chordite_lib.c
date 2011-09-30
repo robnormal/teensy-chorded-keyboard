@@ -285,19 +285,21 @@ ClockReturn *clockReturn(SwitchHistory *h, Output *oM)
 {
   ClockReturn *cr = MALLOC(ClockReturn);
 
-  cr->history = h;
-  cr->outputM = oM;
+  cr->history  = h;
+  cr->outputM  = oM;
 
   return cr;
 }
 
+boole justModifier(Key *k)
+{
+  return k->modifier && !k->key;
+}
+
 ClockReturn *clock(Snapshot currentM, SwitchHistory *history, Layout *l)
 {
-  SwitchHistory *new_h;
-  Output *oM;
-
-  oM    = outputForM(currentM, history, l);
-  new_h = addToHistory(currentM, history);
+  Output        *oM    = outputForM(currentM, history, l);
+  SwitchHistory *new_h = addToHistory(currentM, history);
 
   return clockReturn(new_h, oM);
 }
@@ -441,16 +443,39 @@ Snapshot readInputsAIO()
   return s;
 }
 
-void sendOutputIO(const Output *oM)
+int sendOutputIO(const Output *oM, int modifier)
 {
+  if (oM && oM->count) {
+    int i, end = oM->count;
+    Key *kM;
 
-  if (NULL != oM) {
-    int i;
+    for (i = 0; i < end; ++i) {
+      if (justModifier(oM->keys[i])) {
 
-    for (i = 0; i < oM->count; ++i) {
-      sendKeyIO(oM->keys[i]);
+        return modifier | oM->keys[i]->modifier;
+
+      } else {
+        if (modifier) {
+          kM = newKeyA(oM->keys[i]->key, oM->keys[i]->modifier | modifier); // +1 Key
+
+          if (kM) {
+            sendKeyIO(kM);
+            free(kM); // -1 Key
+
+            return 0;
+          } else {
+
+            return modifier;
+          }
+        } else {
+          sendKeyIO(oM->keys[i]);
+
+          return 0;
+        }
+      }
     }
+  } else {
+    return modifier;
   }
 }
-
 
