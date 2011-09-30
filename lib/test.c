@@ -1,4 +1,27 @@
-#include "chordite_lib.h"
+#include "../chordite_lib.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include "../chordite_lib.c"
+
+void putss(const char *c)
+{
+	printf("%s\n", c);
+}
+
+void deleteLayoutD(Layout *l)
+{
+	int i;
+	for (i = 0; i < l->count; i++) {
+		deleteOutputD(l->outputs[i]);
+		deleteSnapshotD(l->chords[i]);
+	}
+	free(l->outputs);
+	free(l->chords);
+	free(l->ids);
+	free(l);
+}
+
 
 int fake_inputs[100][8];
 int fake_index;
@@ -115,6 +138,9 @@ int main()
 	for (j = 0; j <= 100000; j++) {
 		loop();
 	}
+
+	deleteHistoryD(history_GLOBAL);
+	deleteLayoutD(LAYOUT);
 }
 
 void handleOutOfMemory()
@@ -134,10 +160,10 @@ int readPinIO(int pin)
 void sendKeyIO(const Key *k)
 {
   if (k->modifier != 0) {
-		printf("is modified\n");
+		//printf("is modified\n");
 	}
   if (k->key != 0) {
-		printf("char: %c\n", k->key);
+		// printf("char: %c\n", k->key);
 	}
 }
 

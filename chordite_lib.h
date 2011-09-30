@@ -18,7 +18,7 @@
 
 /** KEYBOARD-SPECIFIC CONFIGURATION **/
 
-#define LAYOUT_SIZE 25
+#define LAYOUT_SIZE 60
 #define NUM_FINGERS 4
 
 #define PINKY_L 0

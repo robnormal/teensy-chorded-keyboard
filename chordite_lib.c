@@ -106,6 +106,10 @@ Output *newOutputA(const int num_keys)
 void deleteOutputD(Output *oM)
 {
   if (NULL != oM) {
+		int i;
+		for (i = 0; i < oM->count; i++) {
+			free(oM->keys[i]);
+		}
 
     free(oM->keys); // individual keys live in LAYOUT, so are never freed
     free(oM);
@@ -205,8 +209,6 @@ SwitchHistory *addToHistory(Snapshot sM, SwitchHistory *h)
       if (NULL == new_firstM) {
         restartHistoryD(h, 0);
       } else {
-        // copy chord, because it may be free()d when we restartHistoryD
-        h->snapshots[0] = copySnapshotA(new_firstM);
         restartHistoryD(h, 1);
         addToHistory(sM, h);
       }
@@ -368,11 +370,15 @@ Output *stringToOutputMA(const char *str)
 
 Layout *addToLayoutA(Snapshot s, Output *o, Layout *l)
 {
-  l->ids    [l->count] = chordId(s);
-  l->chords [l->count] = s;
-  l->outputs[l->count] = o;
+	if (l->count == LAYOUT_SIZE) {
+		putss("Layout exceeds maximum size");
+	} else {
+		l->ids    [l->count] = chordId(s);
+		l->chords [l->count] = s;
+		l->outputs[l->count] = o;
 
-  l->count++;
+		l->count++;
+	}
 
   return l;
 }

@@ -132,7 +132,7 @@ void setupLayout()
 {
   LAYOUT = newLayoutA();
 
-  layoutAddChar( "0200", KEY_SPACE );
+  layoutAddChar( "0200", ' ' );
   layoutAddChar( "2000", 'e' );
   layoutAddChar( "1000", 't' );
   layoutAddChar( "0100", 'a' );
@@ -140,21 +140,37 @@ void setupLayout()
   layoutAddChar( "0300", 'o' );
   layoutAddChar( "0020", 'n' );
   layoutAddChar( "0030", 's' );
-
   layoutAddChar( "0003", 'h' );
   layoutAddChar( "0010", 'r' );
   layoutAddChar( "0001", 'l' );
-
-  layoutAddMod("0002", MODIFIERKEY_CTRL );
-                              
-  layoutAddChar( "2200", 'd' );
-  layoutAddChar( "3300", 'c' );
-  layoutAddChar( "1100", 'u' );
-  layoutAddChar( "0110", 'm' );
+  layoutAddChar( "0002", 'd' );
+  layoutAddChar( "2200", 'c' );
+  layoutAddChar( "3300", 'u' );
+  layoutAddChar( "1100", 'm' );
+  layoutAddChar( "1110", 'w' );
+  layoutAddChar( "0011", 'g' );
+  layoutAddChar( "3333", 'f' );
+  layoutAddChar( "1111", 'y' );
+  layoutAddChar( "0220", 'p' );
+  layoutAddChar( "0022", 'b' );
+  layoutAddChar( "2220", ',' );
+  layoutAddChar( "3330", '.' );
+  layoutAddChar( "0111", 'v' );
+  layoutAddChar( "0333", 'k' );
+  layoutAddChar( "2222", '\n' );
+  layoutAddChar( "0222", '"' );
+  layoutAddChar( "3003", '\'' );
+  layoutAddChar( "1001", '-' );
+  layoutAddChar( "3030", 'x' );
+	layoutAddChar( "0033", 'j' );
+  layoutAddChar( "2002", ';' );
+  layoutAddChar( "1010", '(' );
+  layoutAddChar( "3100", ')' );
+  layoutAddChar( "2001", 'q' );
+  layoutAddChar( "3200", '?' );
 
   layoutAddMod("0330", MODIFIERKEY_SHIFT );
-
-  layoutAddChar( "1110", 'w' );
+  layoutAddMod("0110", MODIFIERKEY_CTRL );
 
 }
 
@@ -165,10 +181,18 @@ void setup() {
   Serial.begin(9600);
   delay(1000);
 
-  Keyboard.println("setup");
   for (int i = 0; i < 13; i++) {
     pinMode(i, INPUT);
   }
+
+/*
+	for (int i = 44; i <= 56; i++) {
+		Keyboard.print("Number: ");
+		Keyboard.println(i);
+		sendKeyIO(newKeyA(i, 0));
+		Keyboard.println("");
+	}
+	*/
 
   // this allocation is never freed
   history_GLOBAL = newHistoryA();
@@ -199,7 +223,5 @@ void loop() {
   // deleteOutputD(r->outputM); // -1 Output
 
   free(r);
-
-  delay(100);
 }
 
