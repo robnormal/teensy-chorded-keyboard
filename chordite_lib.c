@@ -248,7 +248,7 @@ int chordIndex(const Snapshot s, const Layout *l)
   const int id = chordId(s);
   int i;
 
-  for (i = 0; i < LAYOUT_SIZE; ++i) {
+  for (i = 0; i < l->count; ++i) {
     if (id == l->ids[i]) {
       return i;
     }

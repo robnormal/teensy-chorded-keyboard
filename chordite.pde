@@ -169,8 +169,10 @@ void setupLayout()
   layoutAddChar( "2001", 'q' );
   layoutAddChar( "3200", '?' );
 
-  layoutAddMod("0330", MODIFIERKEY_SHIFT );
-  layoutAddMod("0110", MODIFIERKEY_CTRL );
+  // layoutAddChar( "0330", '?' ); // SHIFT
+  // layoutAddMod("0330", MODIFIERKEY_SHIFT );
+  // layoutAddMod("0110", MODIFIERKEY_CTRL );
+  layoutAddChar("0110", 224 ); // ctrl
 
 }
 
