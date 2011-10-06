@@ -479,3 +479,36 @@ int sendOutputIO(const Output *oM, int modifier)
   }
 }
 
+// converts output for computers using the Colemak layout instead of qwerty
+char colemak(const char c) {
+  switch (c) {
+    // a-c are the same
+    case 'd': return 'g';
+    case 'e': return 'k';
+    case 'f': return 'e';
+    case 'g': return 't';
+    // h is the same
+    case 'i': return 'l';
+    case 'j': return 'y';
+    case 'k': return 'n';
+    case 'l': return 'u';
+    // m is the same
+    case 'n': return 'j';
+    case 'o': return ';';
+    case 'p': return 'r';
+    // q is the same
+    case 'r': return 's';
+    case 's': return 'd';
+    case 't': return 'f';
+    case 'u': return 'i';
+    // v & w are the same
+    case 'y': return 'o';
+    // z is the same
+
+    case ';': return 'p';
+
+    // case 'P': return ':';
+    default:  return c;
+  }
+}
+

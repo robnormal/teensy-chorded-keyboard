@@ -46,12 +46,14 @@ int readPinIO(int pin)
 
 int charToCode(const char c)
 {
-  if ('a' <= c && c <= 'z') {
-    return c - ('a' - KEY_A);
-  } else if ('0' <= c && c <= '9') {
-    return c - ('0' - KEY_0);
+  char cc = colemak(c);
+
+  if ('a' <= cc && cc <= 'z') {
+    return cc - ('a' - KEY_A);
+  } else if ('0' <= cc && cc <= '9') {
+    return cc - ('0' - KEY_0);
   } else {
-    switch (c) {
+    switch (cc) {
     case ' ':
       return KEY_SPACE;
     case '-':
@@ -119,7 +121,7 @@ int charToCode(const char c)
     case '~':
       return ASCII_7E;
     default:
-      return c;
+      return cc;
     }
   }
 }
@@ -134,42 +136,42 @@ void setupLayout()
 {
   LAYOUT = newLayoutA();
 
-  layoutAddChar( "0200", ' ' );
-  layoutAddChar( "2000", 'e' );
-  layoutAddChar( "1000", 't' );
-  layoutAddChar( "0100", 'a' );
+  layoutAddChar( "0100", ' ' );
+  layoutAddChar( "1000", 'e' );
+  layoutAddChar( "2000", 't' );
+  layoutAddChar( "0200", 'a' );
   layoutAddChar( "3000", 'i' );
   layoutAddChar( "0300", 'o' );
-  layoutAddChar( "0020", 'n' );
+  layoutAddChar( "0010", 'n' );
   layoutAddChar( "0030", 's' );
   layoutAddChar( "0003", 'h' );
-  layoutAddChar( "0010", 'r' );
-  layoutAddChar( "0001", 'l' );
-  layoutAddChar( "0002", 'd' );
-  layoutAddChar( "2200", 'c' );
+  layoutAddChar( "0020", 'r' );
+  layoutAddChar( "0002", 'l' );
+  layoutAddChar( "0001", 'd' );
+  layoutAddChar( "1100", 'c' );
   layoutAddChar( "3300", 'u' );
-  layoutAddChar( "1100", 'm' );
-  layoutAddChar( "1110", 'w' );
-  layoutAddChar( "0011", 'g' );
+  layoutAddChar( "2200", 'm' );
+  layoutAddChar( "2220", 'w' );
+  layoutAddChar( "0022", 'g' );
   layoutAddChar( "3333", 'f' );
-  layoutAddChar( "1111", 'y' );
-  layoutAddChar( "0220", 'p' );
-  layoutAddChar( "0022", 'b' );
-  layoutAddChar( "2220", ',' );
+  layoutAddChar( "2222", 'y' );
+  layoutAddChar( "0110", 'p' );
+  layoutAddChar( "0011", 'b' );
+  layoutAddChar( "1110", ',' );
   layoutAddChar( "3330", '.' );
-  layoutAddChar( "0111", 'v' );
+  layoutAddChar( "0222", 'v' );
   layoutAddChar( "0333", 'k' );
-  layoutAddChar( "2222", '\n' );
-  layoutAddChar( "0222", '"' );
+  layoutAddChar( "1111", '\n' );
+  layoutAddChar( "0111", '"' );
   layoutAddChar( "3003", '\'' );
-  layoutAddChar( "1001", '-' );
+  layoutAddChar( "2002", '-' );
   layoutAddChar( "3030", 'x' );
 	layoutAddChar( "0033", 'j' );
-  layoutAddChar( "2002", ';' );
-  layoutAddChar( "1010", '(' );
-  layoutAddChar( "3100", ')' );
-  layoutAddChar( "2001", 'q' );
-  layoutAddChar( "3200", '?' );
+  layoutAddChar( "1001", ';' );
+  layoutAddChar( "2020", '(' );
+  layoutAddChar( "3200", ')' );
+  layoutAddChar( "1002", 'q' );
+  layoutAddChar( "3100", '?' );
 
   // layoutAddChar( "0330", '?' ); // SHIFT
   layoutAddMod("0330", MODIFIERKEY_SHIFT );
