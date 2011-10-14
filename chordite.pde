@@ -6,7 +6,7 @@
 
 void putss(const char *c)
 {
-	Keyboard.println(c);
+  Keyboard.println(c);
 }
 
 void handleOutOfMemory()
@@ -44,87 +44,180 @@ int readPinIO(int pin)
   return digitalRead(pin);
 }
 
-int charToCode(const char c)
+Key *charToKeyA(const char c)
 {
-  char cc = colemak(c);
+  // default modifier is 0
+  int key, mod = 0;
 
-  if ('a' <= cc && cc <= 'z') {
-    return cc - ('a' - KEY_A);
-  } else if ('0' <= cc && cc <= '9') {
-    return cc - ('0' - KEY_0);
+  if ('a' <= c && c <= 'z') {
+     key = c - ('a' - KEY_A);
+  } else if ('0' <= c && c <= '9') {
+    key = c - ('0' - KEY_0);
   } else {
-    switch (cc) {
+    switch (c) {
     case ' ':
-      return KEY_SPACE;
+      key = KEY_SPACE;
+      break;
     case '-':
-      return KEY_MINUS;
+      key = KEY_MINUS;
+      break;
     case '=':
-      return KEY_EQUAL;
-    case '[':
-      return KEY_LEFT_BRACE;
-    case ']':
-      return KEY_RIGHT_BRACE;
+      key = KEY_EQUAL;
+      break;
     case '\\':
-      return KEY_BACKSLASH;
+      key = KEY_BACKSLASH;
+      break;
     case ';':
-      return KEY_SEMICOLON;
+      key = KEY_SEMICOLON;
+      break;
     case '\'':
-      return KEY_QUOTE;
-    case '`':
-      return KEY_TILDE;
+      key = KEY_QUOTE;
+      break;
+    case '\n':
+      key = KEY_ENTER;
+      break;
     case ',':
-      return KEY_COMMA;
+      key = KEY_COMMA;
+      break;
     case '.':
-      return KEY_PERIOD;
+      key = KEY_PERIOD;
+      break;
     case '/':
-      return KEY_SLASH;
-    case '!':
-      return ASCII_21;
-    case '"':
-      return ASCII_22;
-    case '#':
-      return ASCII_23;
-    case '$':
-      return ASCII_24;
-    case '%':
-      return ASCII_25;
-    case '&':
-      return ASCII_26;
-    case '(':
-      return ASCII_28;
-    case ')':
-      return ASCII_29;
-    case '*':
-      return ASCII_2A;
-    case '+':
-      return ASCII_2B;
-    case ':':
-      return ASCII_3A;
-    case '<':
-      return ASCII_3C;
-    case '>':
-      return ASCII_3E;
+      key = KEY_SLASH;
+      break;
+    case '[':
+      key = KEY_LEFT_BRACE;
+      break;
+    case ']':
+      key = KEY_RIGHT_BRACE;
+      break;
     case '?':
-      return ASCII_3F;
-    case '@':
-      return ASCII_40;
-    case '^':
-      return ASCII_5E;
-    case '_':
-      return ASCII_5F;
-    case '{':
-      return ASCII_7B;
-    case '|':
-      return ASCII_7C;
-    case '}':
-      return ASCII_7D;
+      key = KEY_SLASH;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '"':
+      key = KEY_QUOTE;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '`':
+      key = KEY_TILDE;
+      break;
     case '~':
-      return ASCII_7E;
+      key = KEY_TILDE;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '!':
+      key = KEY_1;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '@':
+      key = KEY_2;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '#':
+      key = KEY_3;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '$':
+      key = KEY_4;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '%':
+      key = KEY_5;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '^':
+      key = KEY_6;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '&':
+      key = KEY_7;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '*':
+      key = KEY_8;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '(':
+      key = KEY_9;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case ')':
+      key = KEY_0;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '_':
+      key = KEY_MINUS;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '+':
+      key = KEY_EQUAL;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case ':':
+      key = KEY_SEMICOLON;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '<':
+      key = KEY_COMMA;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '>':
+      key = KEY_PERIOD;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '{':
+      key = KEY_LEFT_BRACE;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '|':
+      key = KEY_BACKSLASH;
+      mod = MODIFIERKEY_SHIFT;
+      break;
+    case '}':
+      key = KEY_RIGHT_BRACE;
+      mod = MODIFIERKEY_SHIFT;
+      break;
     default:
-      return cc;
+      key = c;
     }
   }
+
+  return newKeyA(colemak(key), mod);
 }
+
+// converts output for computers using the Colemak layout instead of qwerty
+int colemak(const int key) {
+  switch (key) {
+    // a-c are the same
+    case KEY_D: return KEY_G;
+    case KEY_E: return KEY_K;
+    case KEY_F: return KEY_E;
+    case KEY_G: return KEY_T;
+    // h is the same
+    case KEY_I: return KEY_L;
+    case KEY_J: return KEY_Y;
+    case KEY_K: return KEY_N;
+    case KEY_L: return KEY_U;
+    // m is the same
+    case KEY_N: return KEY_J;
+    case KEY_O: return KEY_SEMICOLON;
+    case KEY_P: return KEY_R;
+    // q is the same
+    case KEY_R: return KEY_S;
+    case KEY_S: return KEY_D;
+    case KEY_T: return KEY_F;
+    case KEY_U: return KEY_I;
+    // v & w are the same
+    case KEY_Y: return KEY_O;
+    // z is the same
+
+    case KEY_SEMICOLON: return KEY_P;
+
+    default:  return key;
+  }
+}
+
 
 
 
@@ -136,6 +229,10 @@ void setupLayout()
 {
   LAYOUT = newLayoutA();
 
+  layoutAddMod("0220", MODIFIERKEY_SHIFT );
+  layoutAddMod("0110", MODIFIERKEY_CTRL );
+  layoutAddKeyCode("0022", KEY_BACKSPACE );
+
   layoutAddChar( "0100", ' ' );
   layoutAddChar( "1000", 'e' );
   layoutAddChar( "2000", 't' );
@@ -143,41 +240,37 @@ void setupLayout()
   layoutAddChar( "3000", 'i' );
   layoutAddChar( "0300", 'o' );
   layoutAddChar( "0010", 'n' );
-  layoutAddChar( "0030", 's' );
-  layoutAddChar( "0003", 'h' );
-  layoutAddChar( "0020", 'r' );
-  layoutAddChar( "0002", 'l' );
-  layoutAddChar( "0001", 'd' );
+  layoutAddChar( "0020", 's' );
+  layoutAddChar( "0002", 'h' );
+  layoutAddChar( "0030", 'r' );
+  layoutAddChar( "0001", 'l' );
+  layoutAddChar( "0003", 'd' );
   layoutAddChar( "1100", 'c' );
   layoutAddChar( "3300", 'u' );
   layoutAddChar( "2200", 'm' );
   layoutAddChar( "2220", 'w' );
-  layoutAddChar( "0022", 'g' );
-  layoutAddChar( "3333", 'f' );
+  layoutAddChar( "0330", 'g' );
+  layoutAddChar( "0011", 'f' );
   layoutAddChar( "2222", 'y' );
-  layoutAddChar( "0110", 'p' );
-  layoutAddChar( "0011", 'b' );
-  layoutAddChar( "1110", ',' );
-  layoutAddChar( "3330", '.' );
-  layoutAddChar( "0222", 'v' );
-  layoutAddChar( "0333", 'k' );
-  layoutAddChar( "1111", '\n' );
-  layoutAddChar( "0111", '"' );
-  layoutAddChar( "3003", '\'' );
-  layoutAddChar( "2002", '-' );
-  layoutAddChar( "3030", 'x' );
-	layoutAddChar( "0033", 'j' );
-  layoutAddChar( "1001", ';' );
-  layoutAddChar( "2020", '(' );
-  layoutAddChar( "3200", ')' );
-  layoutAddChar( "1002", 'q' );
-  layoutAddChar( "3100", '?' );
-
-  // layoutAddChar( "0330", '?' ); // SHIFT
-  layoutAddMod("0330", MODIFIERKEY_SHIFT );
-  layoutAddMod("0110", MODIFIERKEY_CTRL );
-  // layoutAddKeyCode("0110", 74 ); // ctrl
-
+  layoutAddChar( "3333", 'p' );
+  layoutAddChar( "1110", 'b' );
+  layoutAddChar( "3330", ',' );
+  layoutAddChar( "0222", '.' );
+  layoutAddChar( "0333", 'v' );
+  layoutAddChar( "1111", 'k' );
+  layoutAddChar( "0111", '\n' );
+  layoutAddChar( "3003", '"' );
+  layoutAddChar( "2002", '\'' );
+  layoutAddChar( "3030", '-' );
+  layoutAddChar( "0033", 'x' );
+  layoutAddChar( "1001", 'j' );
+  layoutAddChar( "2020", ';' );
+  layoutAddChar( "3200", '(' );
+  layoutAddChar( "1002", ')' );
+  layoutAddChar( "3100", 'q' );
+  layoutAddChar( "1011", '?' );
+  layoutAddChar( "1010", 'z' );
+  layoutAddChar( "3002", ':' );
 }
 
 

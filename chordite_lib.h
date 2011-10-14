@@ -111,6 +111,7 @@ int      sendOutputIO  (const Output *oM, int modifier);
 
 Output   *stringToOutputMA (const char *str);
 Layout   *addToLayoutA     (Snapshot s, Output *o, Layout *l);
+Layout   *layoutAddKey     (const char *chordstr, Key *k);
 Layout   *layoutAddChar    (const char *chordstr, const char c);
 Layout   *layoutAddString  (const char *chordstr, const char *str);
 Layout   *layoutAddMod     (const char *chordstr, const char mod);
@@ -130,7 +131,7 @@ int           modifier_GLOBAL; // context modifier - can be left over from last 
 void handleOutOfMemory ();
 void sendKeyIO         (const Key *k);
 int  readPinIO         (int pin);
-int  charToCode        (const char c);
+Key  *charToKeyA       (const char c);
 
 void putss(const char *c);
 #endif

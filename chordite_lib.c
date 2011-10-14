@@ -387,12 +387,17 @@ Layout *addToLayoutA(Snapshot s, Output *o, Layout *l)
 
 Layout *layoutAddKeyCode(const char *chordstr, const int k)
 {
-  return layoutAddOutput(chordstr, addToOutput(newKeyA(k, 0), newOutputA(1)));
+  return layoutAddKey(chordstr, newKeyA(k, 0));
+}
+
+Layout *layoutAddKey(const char *chordstr, Key *k)
+{
+  return layoutAddOutput(chordstr, addToOutput(k, newOutputA(1)));
 }
 
 Layout *layoutAddChar(const char *chordstr, const char c)
 {
-  return layoutAddKeyCode(chordstr, charToCode(c));
+  return layoutAddKey(chordstr, charToKeyA(c));
 }
 
 Layout *layoutAddString(const char *chordstr, const char *str)
@@ -402,12 +407,15 @@ Layout *layoutAddString(const char *chordstr, const char *str)
 
 Layout *layoutAddMod(const char *chordstr, const char mod)
 {
-  return layoutAddOutput(chordstr, addToOutput(newKeyA(0, mod), newOutputA(1)));
+  return layoutAddKey(chordstr, newKeyA(0, mod));
 }
 
 Layout *layoutAddCharMod(const char *chordstr, const char c, const char mod)
 {
-  return layoutAddOutput(chordstr, addToOutput(newKeyA(charToCode(c), mod), newOutputA(1)));
+  Key *k = charToKeyA(c);
+  k->modifier = k->modifier | mod;
+
+  return layoutAddKey(chordstr, k);
 }
 
 Layout *layoutAddOutput(const char *chordstr, Output *o)
@@ -476,39 +484,6 @@ int sendOutputIO(const Output *oM, int modifier)
     }
   } else {
     return modifier;
-  }
-}
-
-// converts output for computers using the Colemak layout instead of qwerty
-char colemak(const char c) {
-  switch (c) {
-    // a-c are the same
-    case 'd': return 'g';
-    case 'e': return 'k';
-    case 'f': return 'e';
-    case 'g': return 't';
-    // h is the same
-    case 'i': return 'l';
-    case 'j': return 'y';
-    case 'k': return 'n';
-    case 'l': return 'u';
-    // m is the same
-    case 'n': return 'j';
-    case 'o': return ';';
-    case 'p': return 'r';
-    // q is the same
-    case 'r': return 's';
-    case 's': return 'd';
-    case 't': return 'f';
-    case 'u': return 'i';
-    // v & w are the same
-    case 'y': return 'o';
-    // z is the same
-
-    case ';': return 'p';
-
-    // case 'P': return ':';
-    default:  return c;
   }
 }
 
