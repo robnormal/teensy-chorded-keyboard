@@ -1,0 +1,56 @@
+require 'erb'
+
+def valid_chord? c_str
+  c_str.match /^[_v^%]{4}$/
+end
+
+def add_chord c_str, str, l
+  if valid_chord? c_str
+    l[str] = c_str
+  end
+end
+
+def read_layout file
+  layout = {}
+
+  File.foreach file do |line|
+    chord, output = line.split ' '
+    if chord and output
+      add_chord chord, output, layout
+    end
+  end
+
+  layout
+end
+
+def output_group str
+  if str.length > 1
+    if ['Shift', 'Alt', 'Ctrl', 'Win'].include? str
+      0
+    else
+      1
+    end
+  elsif str.match /[a-z]/ then 2
+  elsif str.match /[0-9]/ then 3
+  else 4
+  end
+end
+
+j = read_layout('cheatsheet_reordered.txt')
+
+layout = read_layout('cheatsheet_reordered.txt')
+outputs = layout.keys.sort do |a, b|
+  group_a = output_group a
+  group_b = output_group b
+
+  if group_a != group_b
+    group_a <=> group_b
+  else
+    a <=> b
+  end
+end
+
+
+cheatsheet = ERB.new(File.open('cheat.erb', 'rb').read)
+cheatsheet.run
+

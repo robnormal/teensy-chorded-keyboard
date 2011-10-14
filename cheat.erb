@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Chordite Cheat Sheet</title>
+		<style>
+      tbody {
+        float: left;
+      }
+			td:first-child {
+				font-weight: bold;
+        text-align: right;
+			}
+
+			td span {
+				border: #eee 2px solid;
+				width: 0.5em;
+				height: 0.5em;
+				display: block;
+				margin: 0.1em;
+			}
+
+      td {
+        padding: 0.5em 0;
+      }
+
+			td.top span:first-child {
+				border-color: blue;
+				background-color: #55F;
+			}
+
+			td.bottom span:last-child {
+				border-color: #900;
+				background-color: #C00;
+			}
+
+			td.both span {
+				border-color: #070;
+				background-color: #0A0;
+			}
+
+			td.xxxx span {
+				border-color: #bbb;
+				background-color: #ccc;
+			}
+
+		</style>
+	</head>
+
+	<body>
+		<table>
+			<thead></thead>
+
+      <% (outputs.group_by { |s| output_group s }).each do |_, outs| %>
+        <tbody>
+          <% outs.each do |output| %>
+            <tr>
+              <td><%= output %></td>
+
+              <% layout[output].chars.each do |c| class_attr = case c
+                    when 'v' then 'class="bottom"'
+                    when '^' then 'class="top"'
+                    when '%' then 'class="both"'
+                    else ''
+                    end
+                  %>
+                <td <%= class_attr %>>
+                  <span></span><span></span>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      <% end %>
+		</table>
+	</body>
+</html>
+
