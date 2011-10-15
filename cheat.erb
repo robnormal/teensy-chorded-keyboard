@@ -3,13 +3,38 @@
 	<head>
 		<title>Chordite Cheat Sheet</title>
 		<style>
+      table {
+        border-collapse: collapse;
+      }
+
       tbody {
         float: left;
+        margin-left: 2em;
       }
+
 			td:first-child {
-				font-weight: bold;
+				font: bold 110% sans-serif;
         text-align: right;
+        padding: 0 0.6em;
 			}
+
+      /*
+      tbody > tr.even td:last-child {
+				border-right: #999 2px solid;
+      }
+      */
+
+      tbody > tr.odd td:first-child {
+				border-left: #999 2px solid;
+      }
+
+      tr:nth-of-type(3n) {
+				border-bottom: #999 2px solid;
+      }
+
+      tbody > tr.odd:last-child td {
+				border-bottom: #999 2px solid;
+      }
 
 			td span {
 				border: #eee 2px solid;
@@ -19,23 +44,32 @@
 				margin: 0.1em;
 			}
 
+			td span + span {
+				margin-top: 0.2em;
+			}
+
       td {
-        padding: 0.5em 0;
+        padding: 0.5em 0.1em;
       }
 
+      /* blue */
 			td.top span:first-child {
-				border-color: blue;
-				background-color: #55F;
+				border-color: #283D93;
+        border-bottom-width: 0;
+				background-color: #7A8EE2;
 			}
 
+      /* red */
 			td.bottom span:last-child {
-				border-color: #900;
-				background-color: #C00;
+				border-color: #A66727;
+        border-top-width: 0;
+				background-color: #FFBD79;
 			}
 
+      /* green */
 			td.both span {
-				border-color: #070;
-				background-color: #0A0;
+				border-color: #249646;
+				background-color: #6EE793;
 			}
 
 			td.xxxx span {
@@ -50,12 +84,18 @@
 		<table>
 			<thead></thead>
 
-      <% (outputs.group_by { |s| output_group s }).each do |_, outs| %>
-        <tbody>
+      <% (outputs.group_by { |s| [1, output_group(s)].max }).each do |group, outs| %>
+        <tbody class="group<%= group %>">
+          <% num_tr = 0 %>
           <% outs.each do |output| %>
-            <tr>
-              <td><%= output %></td>
+            <% if (num_tr / 3).odd? %>
+              <tr class="odd">
+            <% else %>
+              <tr class="even">
+            <% end %>
+            <% num_tr += 1 %>
 
+              <td><%= output %></td>
               <% layout[output].chars.each do |c| class_attr = case c
                     when 'v' then 'class="bottom"'
                     when '^' then 'class="top"'

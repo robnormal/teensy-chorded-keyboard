@@ -229,50 +229,66 @@ void setupLayout()
 {
   LAYOUT = newLayoutA();
 
-  layoutAddMod("0220", MODIFIERKEY_SHIFT );
-  layoutAddMod("0110", MODIFIERKEY_CTRL );
-  layoutAddKeyCode("0022", KEY_BACKSPACE );
+  layoutAddMod("_vv_", MODIFIERKEY_SHIFT );
+  layoutAddMod("_^^_", MODIFIERKEY_CTRL );
+  layoutAddMod("_%%%", MODIFIERKEY_GUI );
 
-  layoutAddChar( "0100", ' ' );
-  layoutAddChar( "1000", 'e' );
-  layoutAddChar( "2000", 't' );
-  layoutAddChar( "0200", 'a' );
-  layoutAddChar( "3000", 'i' );
-  layoutAddChar( "0300", 'o' );
-  layoutAddChar( "0010", 'n' );
-  layoutAddChar( "0020", 's' );
-  layoutAddChar( "0002", 'h' );
-  layoutAddChar( "0030", 'r' );
-  layoutAddChar( "0001", 'l' );
-  layoutAddChar( "0003", 'd' );
-  layoutAddChar( "1100", 'c' );
-  layoutAddChar( "3300", 'u' );
-  layoutAddChar( "2200", 'm' );
-  layoutAddChar( "2220", 'w' );
-  layoutAddChar( "0330", 'g' );
-  layoutAddChar( "0011", 'f' );
-  layoutAddChar( "2222", 'y' );
-  layoutAddChar( "3333", 'p' );
-  layoutAddChar( "1110", 'b' );
-  layoutAddChar( "3330", ',' );
-  layoutAddChar( "0222", '.' );
-  layoutAddChar( "0333", 'v' );
-  layoutAddChar( "1111", 'k' );
-  layoutAddChar( "0111", '\n' );
-  layoutAddChar( "3003", '"' );
-  layoutAddChar( "2002", '\'' );
-  layoutAddChar( "3030", '-' );
-  layoutAddChar( "0033", 'x' );
-  layoutAddChar( "1001", 'j' );
-  layoutAddChar( "2020", ';' );
-  layoutAddChar( "3200", '(' );
-  layoutAddChar( "1002", ')' );
-  layoutAddChar( "3100", 'q' );
-  layoutAddChar( "1011", '?' );
-  layoutAddChar( "1010", 'z' );
-  layoutAddChar( "3002", ':' );
+  layoutAddKeyCode("_^__", KEY_BACKSPACE );
+  layoutAddKeyCode( "_^_^", KEY_TAB );
+  layoutAddKeyCode( "vvvv", KEY_ESC );
+
+  layoutAddChar( "_%_%", '\n' );
+  layoutAddChar( "__^_", ' ' );
+  layoutAddChar( "___^", 'e' );
+  layoutAddChar( "___v", 't' );
+  layoutAddChar( "__v_", 'a' );
+  layoutAddChar( "___%", 'i' );
+  layoutAddChar( "__%_", 'o' );
+  layoutAddChar( "_v__", 'n' );
+  layoutAddChar( "v___", 's' );
+  layoutAddChar( "_%__", 'h' );
+  layoutAddChar( "^___", 'r' );
+  layoutAddChar( "%___", 'l' );
+  layoutAddChar( "__^^", 'd' );
+  layoutAddChar( "__%%", 'c' );
+  layoutAddChar( "__vv", 'u' );
+  layoutAddChar( "^^__", 'm' );
+  layoutAddChar( "__^v", 'w' );
+  layoutAddChar( "__^%", 'g' );
+  layoutAddChar( "__%v", 'f' );
+  layoutAddChar( "__v%", 'y' );
+  layoutAddChar( "v__v", 'p' );
+  layoutAddChar( "^__^", 'b' );
+  layoutAddChar( "_v_v", ',' );
+  layoutAddChar( "_^_v", '.' );
+  layoutAddChar( "_vvv", 'v' );
+  layoutAddChar( "_%%_", 'k' );
+  layoutAddChar( "^__v", '"' );
+  layoutAddChar( "%__v", '\'' );
+  layoutAddChar( "%__%", '-' );
+  layoutAddChar( "%%__", 'x' );
+  layoutAddChar( "vvv_", 'j' );
+  layoutAddChar( "_^_%", ';' );
+  layoutAddChar( "^__%", '(' );
+  layoutAddChar( "_^^^", ')' );
+  layoutAddChar( "^^^^", 'q' );
+  layoutAddChar( "^^^_", '?' );
+  layoutAddChar( "%%%_", 'z' );
+  layoutAddChar( "%%%%", ':' );
+  layoutAddChar( "_v_%", '0' );
+  layoutAddChar( "v__^", '1' );
+  layoutAddChar( "%__v", '2' );
+  layoutAddChar( "v__%", '3' );
+  layoutAddChar( "_vv%", '4' );
+  layoutAddChar( "_^^%", '5' );
+  layoutAddChar( "^^_^", '6' );
+  layoutAddChar( "^^_v", '7' );
+  layoutAddChar( "^^_%", '8' );
+  layoutAddChar( "vv_%", '9' );
+  layoutAddChar( "vv_v", '[' );
+  layoutAddChar( "^^^%", ']' );
+
 }
-
 
 void setup() {
   Serial.begin(9600);
@@ -281,15 +297,6 @@ void setup() {
   for (int i = 0; i < 13; i++) {
     pinMode(i, INPUT);
   }
-
-/*
-	for (int i = 44; i <= 56; i++) {
-		Keyboard.print("Number: ");
-		Keyboard.println(i);
-		sendKeyIO(newKeyA(i, 0));
-		Keyboard.println("");
-	}
-	*/
 
   // this allocation is never freed
   history_GLOBAL = newHistoryA();

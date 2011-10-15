@@ -30,9 +30,11 @@ def output_group str
     else
       1
     end
-  elsif str.match /[a-z]/ then 2
-  elsif str.match /[0-9]/ then 3
-  else 4
+  elsif str.match /[a-i]/ then 2
+  elsif str.match /[j-r]/ then 3
+  elsif str.match /[s-z]/ then 4
+  elsif str.match /[0-9]/ then 5
+  else 6
   end
 end
 

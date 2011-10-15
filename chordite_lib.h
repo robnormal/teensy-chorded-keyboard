@@ -33,6 +33,8 @@
 #define UP LOW
 #define DOWN HIGH
 
+#define LEFT_HANDED TRUE
+
 /** END **/
 
 

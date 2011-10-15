@@ -339,11 +339,14 @@ boole newSwitchPressed(const Snapshot a, const Snapshot b)
 /* REQUIREMENT: str must be at least NUM_FINGERS chars long */
 Snapshot stringToSnapshotMA(const char *str)
 {
-  int i;
+  int i, j;
   Snapshot s = newSnapshotA();  // +1 Snapshot
 
   for (i = 0; i < NUM_FINGERS; ++i) {
-    s[i] = ctoi(str[i]);
+    // reverse order of list if left-handed
+    j = LEFT_HANDED ? NUM_FINGERS - 1 - i : i;
+
+    s[j] = ctoi(str[i]);
   }
 
   return s;
@@ -353,7 +356,23 @@ Snapshot stringToSnapshotMA(const char *str)
 
 int ctoi(const char c)
 {
-  return c - '0';
+  switch (c) {
+  case '_':
+    return 0;
+    break;
+  case '^':
+    return 1;
+    break;
+  case 'v':
+    return 2;
+    break;
+  case '%':
+    return 3;
+    break;
+  default:
+    return -1;
+    break;
+  }
 }
 
 // +N Keys
