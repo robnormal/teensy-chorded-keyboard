@@ -4,6 +4,17 @@
 #include <string.h>
 #include "../chordite_lib.c"
 
+/* TODO: this function is defined in teensy-chorded-keyboard.pde.
+ * It depends on libraries included from /<path-to-arduino>/hardware/teensy/
+ * These are added automatically by the arduino IDE, but I will need to add
+ * an environment variable, etc., to have them included when making this test
+ * For the time being, I'm putting this dummy function here to placate
+ * the linker.
+ */
+Key *charToKeyA (const char c)
+{
+}
+
 void putss(const char *c)
 {
 	printf("%s\n", c);
@@ -33,8 +44,8 @@ void setupLayout()
 {
   LAYOUT = newLayoutA();
 
-  layoutAddChar( "0003", 'c' );
-  layoutAddMod ( "2000", 1 );
+  layoutAddKey ( "%___", newKeyA( 'c', 0 ));
+  layoutAddKey ( "___v", newKeyA( 0,   1 ));
 }
 
 void setup()
@@ -94,8 +105,6 @@ void setup()
 			0;
 	}
 
-  printf("show 'c':\n");
-
 	for (i = 4*unit; i < 5*unit; ++i) {
 		fake_inputs[i][0] =
 		fake_inputs[i][1] =
@@ -148,8 +157,6 @@ void setup()
 			0;
 	}
 
-  printf("show 'C':\n");
-
 	for (i = 8*unit; i < 9*unit; ++i) {
 		fake_inputs[i][0] =
 		fake_inputs[i][1] =
@@ -175,8 +182,6 @@ void setup()
 		fake_inputs[i][7] = 
 			0;
 	}
-
-  printf("show 'c' again:\n");
 
 	for (i = 10*unit; i < 11*unit; ++i) {
 		fake_inputs[i][0] =
@@ -227,19 +232,6 @@ void loop()
 	}
 }
 
-int main()
-{
-	setup();
-
-	int j;
-	for (j = 0; j < fake_total; j++) {
-		loop();
-	}
-
-	deleteHistoryD(history_GLOBAL);
-	deleteLayoutD(LAYOUT);
-}
-
 void handleOutOfMemory()
 {
 	printf("out of memory\n");
@@ -267,5 +259,20 @@ void sendKeyIO(const Key *k)
 int charToCode(const char c)
 {
 	return c;
+}
+
+int main()
+{
+	setup();
+
+	int j;
+	for (j = 0; j < fake_total; j++) {
+		loop();
+	}
+
+	deleteHistoryD(history_GLOBAL);
+	deleteLayoutD(LAYOUT);
+
+	printf("\nEXPECTED OUTPUT (above):\n\nchar: c\nis modified: char: c\nchar: c\n");
 }
 
