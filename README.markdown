@@ -7,8 +7,6 @@ keyboard, though it is not necessarily specifc to it.
 
 ## Installation
 
-First, you will need to install:
-
 * Install the [Arduino IDE](http://arduino.cc/en/Main/Software), if you have not already.
 * Install the [Teensyduino](http://www.pjrc.com/teensy/td_download.html) add-on.
 * Open the included sketch:
