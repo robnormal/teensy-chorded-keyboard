@@ -1,22 +1,40 @@
 <!DOCTYPE html>
+
+<% colors  = ['#283D93', '#A66727', '#249646'] %>
+<% borders = ['#7A8EE2', '#FFBD79', '#6EE793'] %>
+
 <html>
 	<head>
 		<title>Chordite Cheat Sheet</title>
 		<style>
+      body {
+        font-size: 105%;
+      }
+
       table {
         border-collapse: collapse;
       }
 
       tbody {
         float: left;
-        margin-left: 2em;
+        /* padding-left: 2em; */
       }
 
 			td:first-child {
 				font: bold 110% sans-serif;
         text-align: right;
         padding: 0 0.6em;
+				border-left: #ddd 3px solid;
 			}
+
+			td:last-child {
+        padding: 0 0.8em 0 0;
+				/* border-left: #ddd 2px solid; */
+			}
+
+      td:nth-child(2) {
+        padding: 0 0 0 0.3em;
+      }
 
       /*
       tbody > tr.even td:last-child {
@@ -24,20 +42,12 @@
       }
       */
 
-      tbody > tr.odd td:first-child {
-				border-left: #999 2px solid;
-      }
-
-      tr:nth-of-type(3n) {
-				border-bottom: #999 2px solid;
-      }
-
-      tbody > tr.odd:last-child td {
-				border-bottom: #999 2px solid;
+      tr {
+				border-bottom: #ddd 3px solid;
       }
 
 			td span {
-				border: #eee 2px solid;
+				border: #eee 3px solid;
 				width: 0.5em;
 				height: 0.5em;
 				display: block;
@@ -49,28 +59,69 @@
 			}
 
       td {
-        padding: 0.5em 0.1em;
+        padding: 0.7em 0.1em;
       }
 
+      /* tops */
+      <% colors.zip(borders).each_with_index do |cs, i| %>
+        tr.row<%= i %> td.top span:first-child {
+          border-color: <%= cs.first %>;
+          background-color: <%= cs.last %>;
+        }
+      <% end %>
+
+      /* bottoms */
+      <% colors.zip(borders).each_with_index do |cs, i| %>
+        tr.row<%= i %> td.bottom span:last-child {
+          border-color: <%= cs.first %>;
+          background-color: <%= cs.last %>;
+        }
+      <% end %>
+
+      /* both */
+      <% colors.zip(borders).each_with_index do |cs, i| %>
+        tr.row<%= i %> td.both span {
+          border-color: <%= cs.first %>;
+          background-color: <%= cs.last %>;
+        }
+      <% end %>
+
       /* blue */
+      /*
 			td.top span:first-child {
 				border-color: #283D93;
         border-bottom-width: 0;
 				background-color: #7A8EE2;
 			}
 
+			td.top span:first-child {
+				border-right-color: #eee;
+				border-left-color: #eee;
+				border-bottom-color: #eee;
+			}
+      */
+
       /* red */
+      /*
 			td.bottom span:last-child {
 				border-color: #A66727;
         border-top-width: 0;
 				background-color: #FFBD79;
 			}
 
+			td.bottom span:last-child {
+				border-bottom-color: #A66727;
+				background-color: #FFBD79;
+			}
+      */
+
       /* green */
+      /*
 			td.both span {
 				border-color: #249646;
 				background-color: #6EE793;
 			}
+      */
 
 			td.xxxx span {
 				border-color: #bbb;
@@ -88,11 +139,7 @@
         <tbody class="group<%= group %>">
           <% num_tr = 0 %>
           <% outs.each do |output| %>
-            <% if (num_tr / 3).odd? %>
-              <tr class="odd">
-            <% else %>
-              <tr class="even">
-            <% end %>
+            <tr class="row<%= num_tr % 3 %>">
             <% num_tr += 1 %>
 
               <td><%= output %></td>
@@ -104,7 +151,8 @@
                     end
                   %>
                 <td <%= class_attr %>>
-                  <span></span><span></span>
+                  <span></span>
+                  <span></span>
                 </td>
               <% end %>
             </tr>

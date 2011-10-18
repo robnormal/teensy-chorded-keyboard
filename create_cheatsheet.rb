@@ -6,6 +6,7 @@ end
 
 def add_chord c_str, str, l
   if valid_chord? c_str
+    if str == 'Backspace' then str = 'Bksp' end
     l[str] = c_str
   end
 end

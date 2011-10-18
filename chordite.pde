@@ -229,9 +229,10 @@ void setupLayout()
 {
   LAYOUT = newLayoutA();
 
-  layoutAddMod("_vv_", MODIFIERKEY_SHIFT );
-  layoutAddMod("_^^_", MODIFIERKEY_CTRL );
-  layoutAddMod("_%%%", MODIFIERKEY_GUI );
+  layoutAddMod( "_vv_", MODIFIERKEY_SHIFT );
+  layoutAddMod( "_^^_", MODIFIERKEY_CTRL );
+  layoutAddMod( "_%%_", MODIFIERKEY_GUI );
+  layoutAddMod( "%%__", MODIFIERKEY_ALT );
 
   layoutAddKeyCode("_^__", KEY_BACKSPACE );
   layoutAddKeyCode( "_^_^", KEY_TAB );
@@ -257,36 +258,35 @@ void setupLayout()
   layoutAddChar( "__^%", 'g' );
   layoutAddChar( "__%v", 'f' );
   layoutAddChar( "__v%", 'y' );
-  layoutAddChar( "v__v", 'p' );
-  layoutAddChar( "^__^", 'b' );
-  layoutAddChar( "_v_v", ',' );
+  layoutAddChar( "_v_v", 'p' );
+  layoutAddChar( "v__v", 'b' );
+  layoutAddChar( "^__^", ',' );
   layoutAddChar( "_^_v", '.' );
   layoutAddChar( "_vvv", 'v' );
-  layoutAddChar( "_%%_", 'k' );
-  layoutAddChar( "^__v", '"' );
-  layoutAddChar( "%__v", '\'' );
-  layoutAddChar( "%__%", '-' );
-  layoutAddChar( "%%__", 'x' );
-  layoutAddChar( "vvv_", 'j' );
-  layoutAddChar( "_^_%", ';' );
-  layoutAddChar( "^__%", '(' );
+  layoutAddChar( "^__v", 'k' );
+  layoutAddChar( "%__v", '"' );
+  layoutAddChar( "%__%", ''' );
+  layoutAddChar( "vvv_", '-' );
+  layoutAddChar( "_^_%", 'x' );
+  layoutAddChar( "_%%%", 'j' );
+  layoutAddChar( "^__%", ';' );
+  layoutAddChar( "_%_v", '(' );
   layoutAddChar( "_^^^", ')' );
   layoutAddChar( "^^^^", 'q' );
-  layoutAddChar( "^^^_", '?' );
-  layoutAddChar( "%%%_", 'z' );
-  layoutAddChar( "%%%%", ':' );
-  layoutAddChar( "_v_%", '0' );
-  layoutAddChar( "v__^", '1' );
-  layoutAddChar( "%__v", '2' );
-  layoutAddChar( "v__%", '3' );
-  layoutAddChar( "_vv%", '4' );
+  layoutAddChar( "^_^_", '?' );
+  layoutAddChar( "^^^_", 'z' );
+  layoutAddChar( "_^%_", ':' );
+  layoutAddChar( "v_v_", '0' );
+  layoutAddChar( "%%%_", '1' );
+  layoutAddChar( "%%%%", '2' );
+  layoutAddChar( "%_%_", '3' );
+  layoutAddChar( "_^^v", '4' );
   layoutAddChar( "_^^%", '5' );
-  layoutAddChar( "^^_^", '6' );
-  layoutAddChar( "^^_v", '7' );
-  layoutAddChar( "^^_%", '8' );
-  layoutAddChar( "vv_%", '9' );
-  layoutAddChar( "vv_v", '[' );
-  layoutAddChar( "^^^%", ']' );
+  layoutAddChar( "_v_%", '6' );
+  layoutAddChar( "v__%", '7' );
+  layoutAddChar( "^^^%", '8' );
+  layoutAddChar( "_vv%", '9' );
+  layoutAddChar( "^^_^", '!' );
 
 }
 
