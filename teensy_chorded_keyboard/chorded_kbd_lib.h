@@ -1,21 +1,6 @@
 #ifndef CHORDED_LIB
 #define CHORDED_LIB
 
-#define MAX_SNAPSHOTS 10
-#define MAX_OUTPUT 3
-
-#define MALLOCS(t,s) (t *) myalloc(s * sizeof(t))
-#define MALLOC(t) (t *) myalloc(sizeof(t))
-
-#define INDEX 0
-#define MIDDLE 1
-#define RING 2
-#define PINKY 3
-#define THUMB 4
-
-#define TRUE 1
-#define FALSE 0
-
 /** KEYBOARD-SPECIFIC CONFIGURATION **/
 
 #define LAYOUT_SIZE 60
@@ -30,14 +15,28 @@
 #define INDEX_L 6
 #define INDEX_H 7
 
+#define LEFT_HANDED TRUE
+
 #define UP LOW
 #define DOWN HIGH
-
-#define LEFT_HANDED TRUE
 
 /** END **/
 
 
+#define MAX_SNAPSHOTS 10
+#define MAX_OUTPUT 3
+
+#define MALLOCS(t,s) (t *) myalloc(s * sizeof(t))
+#define MALLOC(t) (t *) myalloc(sizeof(t))
+
+#define INDEX 0
+#define MIDDLE 1
+#define RING 2
+#define PINKY 3
+#define THUMB 4
+
+#define TRUE 1
+#define FALSE 0
 
 typedef short int boole;
 typedef int FingerState;
