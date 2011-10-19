@@ -39,9 +39,7 @@ def output_group str
   end
 end
 
-j = read_layout('cheatsheet_reordered.txt')
-
-layout = read_layout('cheatsheet_reordered.txt')
+layout = read_layout('chordlist.txt')
 outputs = layout.keys.sort do |a, b|
   group_a = output_group a
   group_b = output_group b
