@@ -36,12 +36,6 @@
         padding: 0 0 0 0.3em;
       }
 
-      /*
-      tbody > tr.even td:last-child {
-				border-right: #999 2px solid;
-      }
-      */
-
       tr {
 				border-bottom: #ddd 3px solid;
       }
@@ -86,48 +80,6 @@
         }
       <% end %>
 
-      /* blue */
-      /*
-			td.top span:first-child {
-				border-color: #283D93;
-        border-bottom-width: 0;
-				background-color: #7A8EE2;
-			}
-
-			td.top span:first-child {
-				border-right-color: #eee;
-				border-left-color: #eee;
-				border-bottom-color: #eee;
-			}
-      */
-
-      /* red */
-      /*
-			td.bottom span:last-child {
-				border-color: #A66727;
-        border-top-width: 0;
-				background-color: #FFBD79;
-			}
-
-			td.bottom span:last-child {
-				border-bottom-color: #A66727;
-				background-color: #FFBD79;
-			}
-      */
-
-      /* green */
-      /*
-			td.both span {
-				border-color: #249646;
-				background-color: #6EE793;
-			}
-      */
-
-			td.xxxx span {
-				border-color: #bbb;
-				background-color: #ccc;
-			}
-
 		</style>
 	</head>
 
@@ -139,8 +91,10 @@
         <tbody class="group<%= group %>">
           <% num_tr = 0 %>
           <% outs.each do |output| %>
+						<% if output == 'Backspace' then output = 'Bksp' end %>
+
             <tr class="row<%= num_tr % 3 %>">
-            <% num_tr += 1 %>
+							<% num_tr += 1 %>
 
               <td><%= output %></td>
               <% layout[output].chars.each do |c| class_attr = case c

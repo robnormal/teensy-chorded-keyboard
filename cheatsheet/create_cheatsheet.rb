@@ -1,28 +1,6 @@
 require 'erb'
-
-def valid_chord? c_str
-  c_str.match /^[_v^%]{4}$/
-end
-
-def add_chord c_str, str, l
-  if valid_chord? c_str
-    if str == 'Backspace' then str = 'Bksp' end
-    l[str] = c_str
-  end
-end
-
-def read_layout file
-  layout = {}
-
-  File.foreach file do |line|
-    chord, output = line.split ' '
-    if chord and output
-      add_chord chord, output, layout
-    end
-  end
-
-  layout
-end
+require File.dirname(__FILE__) + '/chord_layout.rb'
+include ChordLayout
 
 def output_group str
   if str.length > 1
@@ -31,11 +9,13 @@ def output_group str
     else
       1
     end
-  elsif str.match /[a-i]/ then 2
-  elsif str.match /[j-r]/ then 3
-  elsif str.match /[s-z]/ then 4
-  elsif str.match /[0-9]/ then 5
-  else 6
+  else
+    case str
+    when /[a-i]/ then 2
+    when /[j-r]/ then 3
+    when /[s-z]/ then 4
+    when /[0-9]/ then 5
+    else 6
   end
 end
 
