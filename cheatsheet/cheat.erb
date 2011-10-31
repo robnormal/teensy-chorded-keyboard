@@ -91,12 +91,11 @@
         <tbody class="group<%= group %>">
           <% num_tr = 0 %>
           <% outs.each do |output| %>
-						<% if output == 'Backspace' then output = 'Bksp' end %>
-
             <tr class="row<%= num_tr % 3 %>">
 							<% num_tr += 1 %>
 
-              <td><%= output %></td>
+							<% out_str = if output == 'Backspace' then 'Bksp' else output end %>
+              <td><%= out_str %></td>
               <% layout[output].chars.each do |c| class_attr = case c
                     when 'v' then 'class="bottom"'
                     when '^' then 'class="top"'

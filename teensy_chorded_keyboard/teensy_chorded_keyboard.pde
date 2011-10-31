@@ -262,11 +262,10 @@ void setupLayout()
   layoutAddMod( "_%%_", MODIFIERKEY_GUI );
   layoutAddMod( "%%__", MODIFIERKEY_ALT );
 
-  layoutAddKeyCode("_^__", KEY_BACKSPACE );
+  layoutAddKeyCode( "_^__", KEY_BACKSPACE );
   layoutAddKeyCode( "_^_^", KEY_TAB );
   layoutAddKeyCode( "vvvv", KEY_ESC );
 
-  layoutAddChar( "_%_%", '\n' );
   layoutAddChar( "__^_", ' ' );
   layoutAddChar( "___^", 'e' );
   layoutAddChar( "___v", 't' );
@@ -279,18 +278,19 @@ void setupLayout()
   layoutAddChar( "^___", 'r' );
   layoutAddChar( "%___", 'l' );
   layoutAddChar( "__^^", 'd' );
-  layoutAddChar( "__%%", 'c' );
-  layoutAddChar( "__vv", 'u' );
+  layoutAddChar( "__vv", 'c' );
+  layoutAddChar( "__^v", 'u' );
   layoutAddChar( "^^__", 'm' );
-  layoutAddChar( "__^v", 'w' );
-  layoutAddChar( "__^%", 'g' );
-  layoutAddChar( "__%v", 'f' );
+  layoutAddChar( "__^%", 'w' );
+  layoutAddChar( "__%v", 'g' );
+  layoutAddChar( "__%%", 'f' );
   layoutAddChar( "__v%", 'y' );
   layoutAddChar( "_v_v", 'p' );
   layoutAddChar( "v__v", 'b' );
   layoutAddChar( "^__^", ',' );
   layoutAddChar( "_^_v", '.' );
   layoutAddChar( "_vvv", 'v' );
+  layoutAddChar( "_%_%", '\n' );
   layoutAddChar( "^__v", 'k' );
   layoutAddChar( "%__v", '"' );
   layoutAddChar( "%__%", '\'' );

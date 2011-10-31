@@ -2,14 +2,14 @@ require File.dirname(__FILE__) + '/chord_layout.rb'
 include ChordLayout
 
 layout = read_layout('chordlist.txt')
-str = (layout.map do |output, chord|
+lines = layout.map do |output, chord|
   output_str = case output
     when 'Shift';     'MODIFIERKEY_SHIFT'
     when 'Ctrl';      'MODIFIERKEY_CTRL'
     when 'Win';       'MODIFIERKEY_GUI'
     when 'Alt';       'MODIFIERKEY_ALT'
     when 'Backspace'; 'KEY_BACKSPACE'
-    when 'Escape';    'KEY_ESC'
+    when 'Esc';       'KEY_ESC'
     when 'Tab';       'KEY_TAB'
     when 'Space';     "' '"
     when 'Return';    "'\\n'"
@@ -28,7 +28,7 @@ str = (layout.map do |output, chord|
     end
 
   "#{function_str}( \"#{chord}\", #{output_str} );"
-end).join "\n"
+end
 
-puts str
+puts lines.join("\n")
 

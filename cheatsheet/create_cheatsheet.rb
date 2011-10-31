@@ -16,6 +16,7 @@ def output_group str
     when /[s-z]/ then 4
     when /[0-9]/ then 5
     else 6
+    end
   end
 end
 
