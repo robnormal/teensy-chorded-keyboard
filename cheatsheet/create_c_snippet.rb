@@ -11,24 +11,33 @@ lines = layout.map do |output, chord|
     when 'Backspace'; 'KEY_BACKSPACE'
     when 'Esc';       'KEY_ESC'
     when 'Tab';       'KEY_TAB'
+    when 'Up';        'KEY_UP'
+    when 'Down';      'KEY_DOWN'
+    when 'Left';      'KEY_LEFT'
+    when 'Right';     'KEY_RIGHT'
+    when 'PgUp';    'KEY_PAGE_UP'
+    when 'PgDn';  'KEY_PAGE_DOWN'
     when 'Space';     "' '"
     when 'Return';    "'\\n'"
     when 'Enter';     "'\\n'"
     when "'";         "'\\''"
+    when /^KEY/;      output
     else "'" + output + "'"
     end
 
   function_str = case output
     when *['Shift', 'Alt', 'Ctrl', 'Win']
       'layoutAddMod'
-    when *['Backspace', 'Tab', 'Esc']
+    when *['Backspace', 'Tab', 'Esc', /^KEY_/]
       'layoutAddKeyCode'
     else
       'layoutAddChar'
     end
 
   "#{function_str}( \"#{chord}\", #{output_str} );"
+
 end
 
 puts lines.join("\n")
+puts "Layout size: #{lines.count}"
 

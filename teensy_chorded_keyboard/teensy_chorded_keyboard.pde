@@ -4,10 +4,12 @@
 #include "chorded_kbd_lib.h"
 #include "chorded_kbd_lib.c"
 
+/*
 void putss(const char *c)
 {
   Keyboard.println(c);
 }
+*/
 
 void handleOutOfMemory()
 {
@@ -35,7 +37,7 @@ void sendKeyIO(const Key *k)
 
 }
 
-int readPinIO(int pin)
+integer readPinIO(integer pin)
 {
   pinMode(pin, OUTPUT);
   digitalWrite(pin, HIGH);
@@ -47,7 +49,8 @@ int readPinIO(int pin)
 Key *charToKeyA(const char c)
 {
   // default modifier is 0
-  int key, mod = 0;
+  int key;
+  integer mod = 0;
 
   if ('a' <= c && c <= 'z') {
      key = c - ('a' - KEY_A);
@@ -246,6 +249,116 @@ int colemak(const int key) {
   }
 }
 
+// +1 Key
+Key *outputKeyA(const Key *k, const integer modifier)
+{
+  int key = k->key, outkey = key;
+  integer outmod = k->modifier | modifier;
+
+  if (modifier == MODIFIERKEY_SHIFT) {
+    if (k->modifier == 0) {
+      switch (key) {
+      case KEY_0:
+      case KEY_1:
+      case KEY_2:
+      case KEY_3:
+      case KEY_4:
+        outkey = key + (KEY_5 - KEY_0);
+        outmod = 0;
+        break;
+      case KEY_COMMA:
+        // ?
+        outkey = KEY_SLASH;
+        outmod = MODIFIERKEY_SHIFT;
+        break;
+      case KEY_PERIOD:
+        // !
+        outkey = KEY_1;
+        outmod = MODIFIERKEY_SHIFT;
+        break;
+      case KEY_QUOTE:
+        // `
+        outkey = KEY_TILDE;
+        outmod = 0;
+        break;
+      case KEY_SEMICOLON:
+        // @
+        outkey = KEY_2;
+        outmod = MODIFIERKEY_SHIFT;
+        break;
+      case KEY_SLASH:
+        outkey = KEY_BACKSLASH;
+        outmod = 0;
+        break;
+      case KEY_BACKSPACE:
+        outkey = KEY_DELETE;
+        outmod = 0;
+        break;
+      case KEY_PAGE_UP:
+        outkey = KEY_HOME;
+        outmod = 0;
+        break;
+      case KEY_PAGE_DOWN:
+        outkey = KEY_END;
+        outmod = 0;
+        break;
+      }
+    } else if (k->modifier == MODIFIERKEY_SHIFT) {
+      switch (key) {
+
+      // Shift + ( -> [
+      case KEY_9:
+        outkey = KEY_LEFT_BRACE;
+        outmod = 0;
+        break;
+
+      // Shift + ) -> ]
+      case KEY_0:
+        outkey = KEY_RIGHT_BRACE;
+        outmod = 0;
+        break;
+
+      // Shift + { -> <
+      case KEY_LEFT_BRACE:
+        outkey = KEY_COMMA;
+        outmod = MODIFIERKEY_SHIFT;
+        break;
+
+      // Shift + } -> >
+      case KEY_RIGHT_BRACE:
+        outkey = KEY_PERIOD;
+        outmod = MODIFIERKEY_SHIFT;
+        break;
+
+      // Shift + " -> &
+      case KEY_QUOTE:
+        outkey = KEY_7;
+        outmod = MODIFIERKEY_SHIFT;
+        break;
+
+      // Shift + : -> |
+      case KEY_SEMICOLON:
+        outkey = KEY_BACKSLASH;
+        outmod = MODIFIERKEY_SHIFT;
+        break;
+
+      // Shift + $ -> ~
+      case KEY_4:
+        outkey = KEY_TILDE;
+        outmod = MODIFIERKEY_SHIFT;
+        break;
+
+      // Shift + * -> ^
+      case KEY_8:
+        outkey = KEY_6;
+        outmod = MODIFIERKEY_SHIFT;
+        break;
+      }
+    }
+  }
+    
+  return newKeyA(outkey, outmod);
+}
 
 
 
@@ -257,64 +370,68 @@ void setupLayout()
 {
   LAYOUT = newLayoutA();
 
-  layoutAddMod( "_vv_", MODIFIERKEY_SHIFT );
-  layoutAddMod( "_^^_", MODIFIERKEY_CTRL );
-  layoutAddMod( "_%%_", MODIFIERKEY_GUI );
-  layoutAddMod( "%%__", MODIFIERKEY_ALT );
 
-  layoutAddKeyCode( "_^__", KEY_BACKSPACE );
-  layoutAddKeyCode( "_^_^", KEY_TAB );
-  layoutAddKeyCode( "vvvv", KEY_ESC );
-
-  layoutAddChar( "__^_", ' ' );
-  layoutAddChar( "___^", 'e' );
-  layoutAddChar( "___v", 't' );
-  layoutAddChar( "__v_", 'a' );
-  layoutAddChar( "___%", 'i' );
-  layoutAddChar( "__%_", 'o' );
-  layoutAddChar( "_v__", 'n' );
-  layoutAddChar( "v___", 's' );
-  layoutAddChar( "_%__", 'h' );
-  layoutAddChar( "^___", 'r' );
-  layoutAddChar( "%___", 'l' );
-  layoutAddChar( "__^^", 'd' );
-  layoutAddChar( "__vv", 'c' );
-  layoutAddChar( "__^v", 'u' );
-  layoutAddChar( "^^__", 'm' );
-  layoutAddChar( "__^%", 'w' );
-  layoutAddChar( "__%v", 'g' );
-  layoutAddChar( "__%%", 'f' );
-  layoutAddChar( "__v%", 'y' );
-  layoutAddChar( "_v_v", 'p' );
-  layoutAddChar( "v__v", 'b' );
-  layoutAddChar( "^__^", ',' );
-  layoutAddChar( "_^_v", '.' );
-  layoutAddChar( "_vvv", 'v' );
-  layoutAddChar( "_%_%", '\n' );
-  layoutAddChar( "^__v", 'k' );
-  layoutAddChar( "%__v", '"' );
-  layoutAddChar( "%__%", '\'' );
-  layoutAddChar( "vvv_", '-' );
-  layoutAddChar( "_^_%", 'x' );
-  layoutAddChar( "_%%%", 'j' );
-  layoutAddChar( "^__%", ';' );
-  layoutAddChar( "_%_v", '(' );
-  layoutAddChar( "_^^^", ')' );
-  layoutAddChar( "^^^^", 'q' );
-  layoutAddChar( "^_^_", '?' );
-  layoutAddChar( "^^^_", 'z' );
-  layoutAddChar( "_^%_", ':' );
-  layoutAddChar( "v_v_", '0' );
-  layoutAddChar( "%%%_", '1' );
-  layoutAddChar( "%%%%", '2' );
-  layoutAddChar( "%_%_", '3' );
-  layoutAddChar( "_^^v", '4' );
-  layoutAddChar( "_^^%", '5' );
-  layoutAddChar( "_v_%", '6' );
-  layoutAddChar( "v__%", '7' );
-  layoutAddChar( "^^^%", '8' );
-  layoutAddChar( "_vv%", '9' );
-  layoutAddChar( "^^_^", '!' );
+layoutAddKeyCode( "_^_%", KEY_UP );
+layoutAddKeyCode( "_v_%", KEY_DOWN );
+layoutAddKeyCode( "^__%", KEY_LEFT );
+layoutAddKeyCode( "v__%", KEY_RIGHT );
+layoutAddKeyCode( "^^_^", KEY_PAGE_UP );
+layoutAddKeyCode( "vv_v", KEY_PAGE_DOWN );
+layoutAddChar( "__^_", ' ' );
+layoutAddKeyCode( "_^__", KEY_BACKSPACE );
+layoutAddChar( "___^", 'e' );
+layoutAddChar( "___v", 't' );
+layoutAddChar( "__v_", 'a' );
+layoutAddChar( "___%", 'i' );
+layoutAddChar( "__%_", 'o' );
+layoutAddChar( "_v__", 'n' );
+layoutAddChar( "^___", 's' );
+layoutAddChar( "_%__", 'h' );
+layoutAddChar( "v___", 'r' );
+layoutAddChar( "%___", 'l' );
+layoutAddChar( "__^^", 'd' );
+layoutAddChar( "__vv", 'c' );
+layoutAddChar( "__^v", 'u' );
+layoutAddChar( "^^__", 'm' );
+layoutAddMod( "_vv_", MODIFIERKEY_SHIFT );
+layoutAddMod( "_^^_", MODIFIERKEY_CTRL );
+layoutAddMod( "_%%_", MODIFIERKEY_GUI );
+layoutAddMod( "%%__", MODIFIERKEY_ALT );
+layoutAddKeyCode( "_^_^", KEY_TAB );
+layoutAddChar( "__^%", 'w' );
+layoutAddChar( "_^_v", 'g' );
+layoutAddChar( "__%v", 'f' );
+layoutAddChar( "__%%", 'y' );
+layoutAddChar( "_v_v", 'p' );
+layoutAddChar( "v__v", 'b' );
+layoutAddChar( "^__^", ',' );
+layoutAddChar( "_^^^", '.' );
+layoutAddChar( "_vvv", 'v' );
+layoutAddChar( "_%_%", '\n' );
+layoutAddKeyCode( "vvvv", KEY_ESC );
+layoutAddChar( "^__v", 'k' );
+layoutAddChar( "%__%", '\'' );
+layoutAddChar( "%__v", '"' );
+layoutAddChar( "vvv_", '-' );
+layoutAddChar( "__v%", 'x' );
+layoutAddChar( "_%%%", 'j' );
+layoutAddChar( "_%_v", ';' );
+layoutAddChar( "^^^_", '(' );
+layoutAddChar( "^_^_", ')' );
+layoutAddChar( "^^^^", 'q' );
+layoutAddChar( "_^^v", '/' );
+layoutAddChar( "_^^%", 'z' );
+layoutAddChar( "^^_v", ':' );
+layoutAddChar( "_^%_", '0' );
+layoutAddChar( "v_v_", '1' );
+layoutAddChar( "%_%_", '2' );
+layoutAddChar( "%%%_", '3' );
+layoutAddChar( "^^^%", '4' );
+layoutAddChar( "_vv%", '=' );
+layoutAddChar( "%^__", '$' );
+layoutAddChar( "^^_%", '*' );
+layoutAddChar( "^_%_", '{' );
+layoutAddChar( "v_%_", '}' );
 
 }
 
@@ -322,7 +439,7 @@ void setup() {
   Serial.begin(9600);
   delay(1000);
 
-  for (int i = 0; i < 13; i++) {
+  for (integer i = 0; i < 13; i++) {
     pinMode(i, INPUT);
   }
 

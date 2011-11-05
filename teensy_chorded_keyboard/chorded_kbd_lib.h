@@ -3,7 +3,7 @@
 
 /** KEYBOARD-SPECIFIC CONFIGURATION **/
 
-#define LAYOUT_SIZE 60
+#define LAYOUT_SIZE 61
 #define NUM_FINGERS 4
 
 #define PINKY_L 0
@@ -22,7 +22,6 @@
 
 /** END **/
 
-
 #define MAX_SNAPSHOTS 10
 #define MAX_OUTPUT 3
 
@@ -38,30 +37,31 @@
 #define TRUE 1
 #define FALSE 0
 
-typedef short int boole;
-typedef int FingerState;
+typedef unsigned char boole;
+typedef unsigned char integer;
+typedef unsigned char FingerState;
 typedef FingerState * Snapshot;
 
 typedef struct {
-  int modifier;
+  integer modifier;
   int key;
 } Key;
 
 typedef struct {
   Snapshot *snapshots;
-  int place;
+  integer place;
 } SwitchHistory;
 
 typedef struct {
   Key **keys;
-  int count;
+  integer count;
 } Output;
 
 typedef struct {
   int *ids;
   Snapshot *chords;
   Output   **outputs;
-  int count;
+  integer count;
 } Layout;
 
 typedef struct {
@@ -70,21 +70,21 @@ typedef struct {
 } ClockReturn;
 
 
-int ctoi(const char c);
+integer ctoi(const char c);
 
 void handleOutOfMemory();
 void *myalloc(int size);
 
-Key           *newKeyA     (const int key, const int modifier);
+Key           *newKeyA     (const int key, const integer modifier);
 Snapshot      newSnapshotA ();
 SwitchHistory *newHistoryA ();
-Output        *newOutputA  (const int num_keys);
+Output        *newOutputA  (const integer num_keys);
 Layout        *newLayoutA  ();
 
 void deleteSnapshotD          (Snapshot sM);
 void deleteHistoryD           (SwitchHistory *hM);
 void deleteOutputD            (Output *oM);
-void discardHistorySnapshotsD (SwitchHistory *hM, int starting_at);
+void discardHistorySnapshotsD (SwitchHistory *hM, integer starting_at);
 
 Snapshot copySnapshotA(const Snapshot s);
 
@@ -95,20 +95,22 @@ Snapshot chordFromM  (const SwitchHistory *h);
 boole isRelease (const Snapshot s);
 int chordId     (const Snapshot s);
 
-SwitchHistory *restartHistoryD (SwitchHistory *h, int starting_at);
+SwitchHistory *restartHistoryD (SwitchHistory *h, integer starting_at);
 SwitchHistory *addToHistory    (Snapshot sM, SwitchHistory *h);
 
 Output *addToOutput (Key *k, Output *o);
 
 boole newSwitchPressed(const Snapshot a, const Snapshot b);
 Output *outputForM (const Snapshot sM, const SwitchHistory *h, const Layout *l);
-int chordIndex     (const Snapshot s, const Layout *l);
+integer chordIndex     (const Snapshot s, const Layout *l);
 
 ClockReturn *clockReturn (SwitchHistory *history, Output *output);
 ClockReturn *clock       (Snapshot currentM, SwitchHistory *history, Layout *l);
 
 Snapshot readInputsAIO ();
-int      sendOutputIO  (const Output *oM, int modifier);
+integer  sendOutputIO  (const Output *oM, integer modifier);
+
+Key      *outputKeyA   (const Key *k, const integer modifier);
 
 Output   *stringToOutputMA (const char *str);
 Layout   *addToLayoutA     (Snapshot s, Output *o, Layout *l);
@@ -122,7 +124,7 @@ Layout   *layoutAddOutput  (const char *chordstr, Output *o);
 /** GLOBALS **/
 Layout        *LAYOUT; // treat as constant once created
 SwitchHistory *history_GLOBAL;
-int           modifier_GLOBAL; // context modifier - can be left over from last chord release
+integer           modifier_GLOBAL; // context modifier - can be left over from last chord release
 
 /**
  * These are NOT defined in chorded_kbd_lib.c
@@ -131,7 +133,7 @@ int           modifier_GLOBAL; // context modifier - can be left over from last 
  */
 void handleOutOfMemory ();
 void sendKeyIO         (const Key *k);
-int  readPinIO         (int pin);
+integer  readPinIO     (integer pin);
 Key  *charToKeyA       (const char c);
 
 void putss(const char *c);

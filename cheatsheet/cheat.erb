@@ -8,7 +8,7 @@
 		<title>Chordite Cheat Sheet</title>
 		<style>
       body {
-        font-size: 105%;
+        font-size: 90%;
       }
 
       table {
@@ -87,7 +87,7 @@
 		<table>
 			<thead></thead>
 
-      <% (outputs.group_by { |s| [1, output_group(s)].max }).each do |group, outs| %>
+      <% (outputs.group_by { |s| [2, output_group(s)].max }).each do |group, outs| %>
         <tbody class="group<%= group %>">
           <% num_tr = 0 %>
           <% outs.each do |output| %>

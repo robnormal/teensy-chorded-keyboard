@@ -1,6 +1,6 @@
 module ChordLayout
   def valid_chord? c_str
-    c_str.match /^[_v^%]{4}$/
+    c_str.match /^(S-)?[_v^%]{4}$/
   end
 
   def add_chord c_str, str, l

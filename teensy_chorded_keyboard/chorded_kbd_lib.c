@@ -3,16 +3,16 @@
 #include <string.h>
 #include "chorded_kbd_lib.h"
 
-const int SWITCHES[NUM_FINGERS][2] = {
+const integer SWITCHES[NUM_FINGERS][2] = {
   { INDEX_L,  INDEX_H  }, 
   { MIDDLE_L, MIDDLE_H },
   { RING_L,   RING_H   },
   { PINKY_L,  PINKY_H  }
 };
-const int NUM_SWITCHES[NUM_FINGERS] = {2, 2, 2, 2}; 
+const integer NUM_SWITCHES[NUM_FINGERS] = {2, 2, 2, 2}; 
 
 // chordite has 2 switches per finger, plus pressing _both_, which counts separately, as does pressing _nothing_
-const int NUM_STATES[NUM_FINGERS] = {4, 4, 4, 4}; 
+const integer NUM_STATES[NUM_FINGERS] = {4, 4, 4, 4}; 
 
 /** END **/
 
@@ -28,7 +28,7 @@ void *myalloc(int size)
 }
 
 // Never deleted - these live in LAYOUT for duration of program
-Key *newKeyA(const int key, const int modifier)
+Key *newKeyA(const int key, const integer modifier)
 {
   Key *k = MALLOC(Key);
 
@@ -55,7 +55,7 @@ void deleteSnapshotD(Snapshot sM)
 Snapshot copySnapshotA(const Snapshot s)
 {
   Snapshot s_new = newSnapshotA();
-  int i;
+  integer i;
 
   for (i = 0; i < NUM_FINGERS; ++i) {
     s_new[i] = s[i];
@@ -85,16 +85,16 @@ void deleteHistoryD(SwitchHistory *hM)
 }
 
 // -N Snapshots
-void discardHistorySnapshotsD(SwitchHistory *h, int starting_at)
+void discardHistorySnapshotsD(SwitchHistory *h, integer starting_at)
 {
-  int i;
+  integer i;
 
   for (i = starting_at; i < h->place; ++i) {
     deleteSnapshotD(h->snapshots[i]);
   }
 }
 
-Output *newOutputA(const int num_keys)
+Output *newOutputA(const integer num_keys)
 {
   Output *o = MALLOC(Output);
   o->keys   = MALLOCS(Key *, num_keys);
@@ -106,7 +106,7 @@ Output *newOutputA(const int num_keys)
 void deleteOutputD(Output *oM)
 {
   if (NULL != oM) {
-		int i;
+		integer i;
 		for (i = 0; i < oM->count; i++) {
 			free(oM->keys[i]);
 		}
@@ -136,7 +136,7 @@ boole historyIsEmpty(const SwitchHistory *h)
 // All switches have been released?
 boole isRelease(const Snapshot s)
 {
-  int i;
+  integer i;
 
   for (i = 0; i < NUM_FINGERS; ++i) {
     if (s[i] > 0) {
@@ -154,7 +154,8 @@ boole historyTooLong(const SwitchHistory *h)
 
 int chordId(const Snapshot s)
 {
-  int i, multiplier = 1, id = 0;
+  integer i;
+  int id = 0, multiplier = 1;
 
   // number-base style, this forms unique IDS using the smallest possible integers
   for (i = 0; i < NUM_FINGERS; ++i) {
@@ -169,7 +170,7 @@ int chordId(const Snapshot s)
 
 // -N Snapshots
 // CHANGES h
-SwitchHistory *restartHistoryD(SwitchHistory *h, int starting_at)
+SwitchHistory *restartHistoryD(SwitchHistory *h, integer starting_at)
 {
   // EXPLAIN ME: why do I have to NOT delete these snapshots?
   discardHistorySnapshotsD(h, starting_at);
@@ -243,10 +244,10 @@ Output *addToOutput(Key *k, Output *o)
   return o;
 }
 
-int chordIndex(const Snapshot s, const Layout *l)
+integer chordIndex(const Snapshot s, const Layout *l)
 {
   const int id = chordId(s);
-  int i;
+  integer i;
 
   for (i = 0; i < l->count; ++i) {
     if (id == l->ids[i]) {
@@ -264,7 +265,7 @@ Output *outputForM(const Snapshot sM, const SwitchHistory *h, const Layout *l)
     Snapshot chordM = chordFromM(h);
 
     if (NULL != chordM) {
-      int index = chordIndex(chordM, l);
+      integer index = chordIndex(chordM, l);
       if (index != -1) {
         o = l->outputs[index];
       } else {
@@ -317,7 +318,7 @@ Snapshot chordFromM(const SwitchHistory *h)
 
 boole newSwitchPressed(const Snapshot a, const Snapshot b)
 {
-  int i;
+  integer i;
 
   // these are the rules for the chordite
   // 3 -> * = no
@@ -336,10 +337,15 @@ boole newSwitchPressed(const Snapshot a, const Snapshot b)
   return FALSE;
 }
 
+boole chordStringIsShifted(const char *str)
+{
+  return str[0] == 'S' && str[1] == '-';
+}
+
 /* REQUIREMENT: str must be at least NUM_FINGERS chars long */
 Snapshot stringToSnapshotMA(const char *str)
 {
-  int i, j;
+  integer i, j;
   Snapshot s = newSnapshotA();  // +1 Snapshot
 
   for (i = 0; i < NUM_FINGERS; ++i) {
@@ -354,7 +360,7 @@ Snapshot stringToSnapshotMA(const char *str)
 
 
 
-int ctoi(const char c)
+integer ctoi(const char c)
 {
   switch (c) {
   case '_':
@@ -379,7 +385,7 @@ int ctoi(const char c)
 // +1 Output
 Output *stringToOutputMA(const char *str)
 {
-  int i, len = strlen(str);
+  integer i, len = strlen(str);
   Output *o = newOutputA(len);
 
   for (i = 0; i < len; i++) {
@@ -392,7 +398,7 @@ Output *stringToOutputMA(const char *str)
 Layout *addToLayoutA(Snapshot s, Output *o, Layout *l)
 {
 	if (l->count == LAYOUT_SIZE) {
-		putss("Layout exceeds maximum size");
+		// putss("Layout exceeds maximum size");
 	} else {
 		l->ids    [l->count] = chordId(s);
 		l->chords [l->count] = s;
@@ -450,7 +456,7 @@ Layout *layoutAddOutput(const char *chordstr, Output *o)
 // +1 Snapshot
 Snapshot readInputsAIO()
 {
-  int i, j;
+  integer i, j;
   FingerState state;
 
   Snapshot s = newSnapshotA();  // +1 Snapshot
@@ -470,10 +476,10 @@ Snapshot readInputsAIO()
   return s;
 }
 
-int sendOutputIO(const Output *oM, int modifier)
+integer sendOutputIO(const Output *oM, integer modifier)
 {
   if (oM && oM->count) {
-    int i, end = oM->count;
+    integer i, end = oM->count;
     Key *kM;
 
     for (i = 0; i < end; ++i) {
@@ -483,7 +489,7 @@ int sendOutputIO(const Output *oM, int modifier)
 
       } else {
         if (modifier) {
-          kM = newKeyA(oM->keys[i]->key, oM->keys[i]->modifier | modifier); // +1 Key
+          kM = outputKeyA(oM->keys[i], modifier); // +1 Key
 
           if (kM) {
             sendKeyIO(kM);
