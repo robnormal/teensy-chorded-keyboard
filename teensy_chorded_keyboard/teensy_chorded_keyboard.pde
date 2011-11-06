@@ -4,13 +4,6 @@
 #include "chorded_kbd_lib.h"
 #include "chorded_kbd_lib.c"
 
-/*
-void putss(const char *c)
-{
-  Keyboard.println(c);
-}
-*/
-
 void handleOutOfMemory()
 {
   Keyboard.println("out of memory");
@@ -214,7 +207,8 @@ Key *charToKeyA(const char c)
     }
   }
 
-  return newKeyA(colemak(key), mod);
+  // return newKeyA(colemak(key), mod);
+  return newKeyA(key, mod);
 }
 
 // converts output for computers using the Colemak layout instead of qwerty
@@ -259,11 +253,23 @@ Key *outputKeyA(const Key *k, const integer modifier)
     if (k->modifier == 0) {
       switch (key) {
       case KEY_0:
+        outkey = KEY_5;
+        outmod = 0;
+        break;
       case KEY_1:
+        outkey = KEY_6;
+        outmod = 0;
+        break;
       case KEY_2:
+        outkey = KEY_7;
+        outmod = 0;
+        break;
       case KEY_3:
+        outkey = KEY_8;
+        outmod = 0;
+        break;
       case KEY_4:
-        outkey = key + (KEY_5 - KEY_0);
+        outkey = KEY_9;
         outmod = 0;
         break;
       case KEY_COMMA:
@@ -356,8 +362,8 @@ Key *outputKeyA(const Key *k, const integer modifier)
       }
     }
   }
-    
-  return newKeyA(outkey, outmod);
+
+  return newKeyA(colemak(outkey), outmod);
 }
 
 
@@ -370,68 +376,67 @@ void setupLayout()
 {
   LAYOUT = newLayoutA();
 
-
-layoutAddKeyCode( "_^_%", KEY_UP );
-layoutAddKeyCode( "_v_%", KEY_DOWN );
-layoutAddKeyCode( "^__%", KEY_LEFT );
-layoutAddKeyCode( "v__%", KEY_RIGHT );
-layoutAddKeyCode( "^^_^", KEY_PAGE_UP );
-layoutAddKeyCode( "vv_v", KEY_PAGE_DOWN );
-layoutAddChar( "__^_", ' ' );
-layoutAddKeyCode( "_^__", KEY_BACKSPACE );
-layoutAddChar( "___^", 'e' );
-layoutAddChar( "___v", 't' );
-layoutAddChar( "__v_", 'a' );
-layoutAddChar( "___%", 'i' );
-layoutAddChar( "__%_", 'o' );
-layoutAddChar( "_v__", 'n' );
-layoutAddChar( "^___", 's' );
-layoutAddChar( "_%__", 'h' );
-layoutAddChar( "v___", 'r' );
-layoutAddChar( "%___", 'l' );
-layoutAddChar( "__^^", 'd' );
-layoutAddChar( "__vv", 'c' );
-layoutAddChar( "__^v", 'u' );
-layoutAddChar( "^^__", 'm' );
-layoutAddMod( "_vv_", MODIFIERKEY_SHIFT );
-layoutAddMod( "_^^_", MODIFIERKEY_CTRL );
-layoutAddMod( "_%%_", MODIFIERKEY_GUI );
-layoutAddMod( "%%__", MODIFIERKEY_ALT );
-layoutAddKeyCode( "_^_^", KEY_TAB );
-layoutAddChar( "__^%", 'w' );
-layoutAddChar( "_^_v", 'g' );
-layoutAddChar( "__%v", 'f' );
-layoutAddChar( "__%%", 'y' );
-layoutAddChar( "_v_v", 'p' );
-layoutAddChar( "v__v", 'b' );
-layoutAddChar( "^__^", ',' );
-layoutAddChar( "_^^^", '.' );
-layoutAddChar( "_vvv", 'v' );
-layoutAddChar( "_%_%", '\n' );
-layoutAddKeyCode( "vvvv", KEY_ESC );
-layoutAddChar( "^__v", 'k' );
-layoutAddChar( "%__%", '\'' );
-layoutAddChar( "%__v", '"' );
-layoutAddChar( "vvv_", '-' );
-layoutAddChar( "__v%", 'x' );
-layoutAddChar( "_%%%", 'j' );
-layoutAddChar( "_%_v", ';' );
-layoutAddChar( "^^^_", '(' );
-layoutAddChar( "^_^_", ')' );
-layoutAddChar( "^^^^", 'q' );
-layoutAddChar( "_^^v", '/' );
-layoutAddChar( "_^^%", 'z' );
-layoutAddChar( "^^_v", ':' );
-layoutAddChar( "_^%_", '0' );
-layoutAddChar( "v_v_", '1' );
-layoutAddChar( "%_%_", '2' );
-layoutAddChar( "%%%_", '3' );
-layoutAddChar( "^^^%", '4' );
-layoutAddChar( "_vv%", '=' );
-layoutAddChar( "%^__", '$' );
-layoutAddChar( "^^_%", '*' );
-layoutAddChar( "^_%_", '{' );
-layoutAddChar( "v_%_", '}' );
+  layoutAddKeyCode( "_^_%", KEY_UP );
+  layoutAddKeyCode( "_v_%", KEY_DOWN );
+  layoutAddKeyCode( "^__%", KEY_LEFT );
+  layoutAddKeyCode( "v__%", KEY_RIGHT );
+  layoutAddKeyCode( "^^_^", KEY_PAGE_UP );
+  layoutAddKeyCode( "vv_v", KEY_PAGE_DOWN );
+  layoutAddChar( "__^_", ' ' );
+  layoutAddKeyCode( "_^__", KEY_BACKSPACE );
+  layoutAddChar( "___^", 'e' );
+  layoutAddChar( "___v", 't' );
+  layoutAddChar( "__v_", 'a' );
+  layoutAddChar( "___%", 'i' );
+  layoutAddChar( "__%_", 'o' );
+  layoutAddChar( "_v__", 'n' );
+  layoutAddChar( "^___", 's' );
+  layoutAddChar( "_%__", 'h' );
+  layoutAddChar( "v___", 'r' );
+  layoutAddChar( "%___", 'l' );
+  layoutAddChar( "__^^", 'd' );
+  layoutAddChar( "__vv", 'c' );
+  layoutAddChar( "__^v", 'u' );
+  layoutAddChar( "^^__", 'm' );
+  layoutAddMod( "_vv_", MODIFIERKEY_SHIFT );
+  layoutAddMod( "_^^_", MODIFIERKEY_CTRL );
+  layoutAddMod( "_%%_", MODIFIERKEY_GUI );
+  layoutAddMod( "%%__", MODIFIERKEY_ALT );
+  layoutAddKeyCode( "_^_^", KEY_TAB );
+  layoutAddChar( "__^%", 'w' );
+  layoutAddChar( "_^_v", 'g' );
+  layoutAddChar( "__%v", 'f' );
+  layoutAddChar( "__%%", 'y' );
+  layoutAddChar( "_v_v", 'p' );
+  layoutAddChar( "v__v", 'b' );
+  layoutAddChar( "^__^", ',' );
+  layoutAddChar( "_^^^", '.' );
+  layoutAddChar( "_vvv", 'v' );
+  layoutAddChar( "_%_%", '\n' );
+  layoutAddKeyCode( "vvvv", KEY_ESC );
+  layoutAddChar( "^__v", 'k' );
+  layoutAddChar( "%__%", '\'' );
+  layoutAddChar( "%__v", '"' );
+  layoutAddChar( "vvv_", '-' );
+  layoutAddChar( "__v%", 'x' );
+  layoutAddChar( "_%%%", 'j' );
+  layoutAddChar( "_%_v", ';' );
+  layoutAddChar( "^^^_", '(' );
+  layoutAddChar( "^_^_", ')' );
+  layoutAddChar( "^^^^", 'q' );
+  layoutAddChar( "_^^v", '/' );
+  layoutAddChar( "_^^%", 'z' );
+  layoutAddChar( "^^_v", ':' );
+  layoutAddChar( "_^%_", '0' );
+  layoutAddChar( "v_v_", '1' );
+  layoutAddChar( "%_%_", '2' );
+  layoutAddChar( "%%%_", '3' );
+  layoutAddChar( "^^^%", '4' );
+  layoutAddChar( "_vv%", '=' );
+  layoutAddChar( "%^__", '$' );
+  layoutAddChar( "^^_%", '*' );
+  layoutAddChar( "^_%_", '{' );
+  layoutAddChar( "v_%_", '}' );
 
 }
 

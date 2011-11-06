@@ -488,22 +488,15 @@ integer sendOutputIO(const Output *oM, integer modifier)
         return modifier | oM->keys[i]->modifier;
 
       } else {
-        if (modifier) {
-          kM = outputKeyA(oM->keys[i], modifier); // +1 Key
+        kM = outputKeyA(oM->keys[i], modifier); // +1 Key
 
-          if (kM) {
-            sendKeyIO(kM);
-            free(kM); // -1 Key
-
-            return 0;
-          } else {
-
-            return modifier;
-          }
-        } else {
-          sendKeyIO(oM->keys[i]);
+        if (kM) {
+          sendKeyIO(kM);
+          free(kM); // -1 Key
 
           return 0;
+        } else {
+          return modifier;
         }
       }
     }
