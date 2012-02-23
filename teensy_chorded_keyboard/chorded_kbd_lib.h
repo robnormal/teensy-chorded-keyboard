@@ -1,3 +1,15 @@
+/**
+ * Suffix legend:
+ *
+ * M:  "Maybe" - values that may be NULL, or functions that may return NULL
+ * A:  "Allocates" - function that allocates memory it does not free. 
+ *        Check comment for how much memory. Refers to the net effect of 
+ *        the function. Thus, a function that calls an "A" and does not
+ *        free the resulting allocation must also end in "A".
+ * D:  "Deallocates" - function that frees memory it does not allocate.
+ *        Refers to net effect of function.
+ * IO: "I/O" - performs input/output. Refers to net effect of function.
+ */
 #ifndef CHORDED_LIB
 #define CHORDED_LIB
 
