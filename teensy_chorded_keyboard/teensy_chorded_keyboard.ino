@@ -1,12 +1,31 @@
+#include <Bounce2.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "chorded_kbd_lib.h"
 #include "chorded_kbd_lib.c"
 
+Bounce buttons[NUM_FINGERS * 2];
+
 void handleOutOfMemory()
 {
   Keyboard.println("out of memory");
+}
+
+void iDebugOut(int out)
+{
+  Keyboard.print(out);
+  Serial.print(out);
+}
+
+void strDebugOut(char *out)
+{
+  Keyboard.println(out);
+}
+
+void debugout(String out)
+{
+    Keyboard.println(out);
 }
 
 void sendKeyIO(const Key *k)
@@ -32,11 +51,12 @@ void sendKeyIO(const Key *k)
 
 integer readPinIO(integer pin)
 {
-  pinMode(pin, OUTPUT);
-  digitalWrite(pin, HIGH);
-  pinMode(pin, INPUT);
+  buttons[pin].update();
+  
+  integer s = buttons[pin].read();
 
-  return digitalRead(pin);
+  //Toggle if PULLUP
+  return s!=PULLUP;
 }
 
 Key *charToKeyA(const char c)
@@ -363,7 +383,8 @@ Key *outputKeyA(const Key *k, const integer modifier)
     }
   }
 
-  return newKeyA(colemak(outkey), outmod);
+  //return newKeyA(colemak(outkey), outmod);
+  return newKeyA(outkey, outmod);
 }
 
 
@@ -371,6 +392,83 @@ Key *outputKeyA(const Key *k, const integer modifier)
 
 
 /***** MAIN PROCESSES BELOW HERE *****/
+
+void setupLayoutUEB()
+{
+  LAYOUT = newLayoutA();
+
+//  layoutAddKeyCode( "_^_%", KEY_UP );
+//  layoutAddKeyCode( "_v_%", KEY_DOWN );
+//  layoutAddKeyCode( "^__%", KEY_LEFT );
+//  layoutAddKeyCode( "v__%", KEY_RIGHT );
+//  layoutAddKeyCode( "^^_^", KEY_PAGE_UP );
+//  layoutAddKeyCode( "vv_v", KEY_PAGE_DOWN );
+//  layoutAddChar( "__^_", ' ' );
+//  layoutAddKeyCode( "_^__", KEY_BACKSPACE );
+//  layoutAddMod( "_vv_", MODIFIERKEY_SHIFT );
+//  layoutAddMod( "_^^_", MODIFIERKEY_CTRL );
+//  layoutAddMod( "_%%_", MODIFIERKEY_GUI );
+//  layoutAddMod( "%%__", MODIFIERKEY_ALT );
+//  layoutAddKeyCode( "_^_^", KEY_TAB );
+//  layoutAddChar( "_%_%", '\n' );
+//  layoutAddKeyCode( "vvvv", KEY_ESC );
+//  layoutAddChar( "^__^", ',' );
+//  layoutAddChar( "_^^^", '.' );
+//  layoutAddChar( "%__%", '\'' );
+//  layoutAddChar( "%__v", '"' );
+//  layoutAddChar( "vvv_", '-' );
+//  layoutAddChar( "_%_v", ';' );
+//  layoutAddChar( "^^^_", '(' );
+//  layoutAddChar( "^_^_", ')' );
+//  layoutAddChar( "_^^v", '/' );
+//  layoutAddChar( "^^_v", ':' );
+//  layoutAddChar( "_vv%", '=' );
+//  layoutAddChar( "%^__", '$' );
+//  layoutAddChar( "^^_%", '*' );
+//  layoutAddChar( "^_%_", '{' );
+//  layoutAddChar( "v_%_", '}' );
+//  layoutAddChar( "_^%_", '0' );
+//  layoutAddChar( "v_v_", '1' );
+//  layoutAddChar( "%_%_", '2' );
+//  layoutAddChar( "%%%_", '3' );
+//  layoutAddChar( "^^^%", '4' );
+
+/*
+  This assumes ten keys in a row corresponding to each finger.
+    Layout  1v 1^ 2v 2^ 3v 3^ 4v 4^ 5v 5^
+            _  _  _  _  _  _  _  _  _  _
+    Finger  LP RT LR RI LM RM LI RR LT RP
+    EUB     X  X  3  4  2  5  1  6  X  X
+    button  1  2  3  4  5  6  7  8  9  10
+*/
+  layoutAddChar( "___v_", 'a' );
+  layoutAddChar( "__vv_", 'b' );
+  layoutAddChar( "_^_v_", 'c' );
+  layoutAddChar( "_^^v_", 'd' );
+  layoutAddChar( "__^v_", 'e' );
+  layoutAddChar( "_^vv_", 'f' );
+  layoutAddChar( "_^%v_", 'g' );
+  layoutAddChar( "__%v_", 'h' );
+  layoutAddChar( "_^v__", 'i' );
+  layoutAddChar( "_^%__", 'j' );
+  layoutAddChar( "_v_v_", 'k' );
+  layoutAddChar( "_vvv_", 'l' );
+  layoutAddChar( "_%_v_", 'm' );
+  layoutAddChar( "_%^v_", 'n' );
+  layoutAddChar( "_v^v_", 'o' );
+  layoutAddChar( "_%vv_", 'p' );
+  layoutAddChar( "_%%v_", 'q' );
+  layoutAddChar( "_v%v_", 'r' );
+  layoutAddChar( "_%v__", 's' );
+  layoutAddChar( "_%%__", 't' );
+  layoutAddChar( "_v_%_", 'u' );
+  layoutAddChar( "_vv%_", 'v' );
+  layoutAddChar( "_^%^_", 'w' );
+  layoutAddChar( "_%_%_", 'x' );
+  layoutAddChar( "_%^%_", 'y' );
+  layoutAddChar( "_v^%_", 'z' );
+
+}
 
 void setupLayout()
 {
@@ -437,21 +535,25 @@ void setupLayout()
   layoutAddChar( "^^_%", '*' );
   layoutAddChar( "^_%_", '{' );
   layoutAddChar( "v_%_", '}' );
-
 }
 
 void setup() {
   Serial.begin(9600);
   delay(1000);
 
-  for (integer i = 0; i < 13; i++) {
-    pinMode(i, INPUT);
+
+  //We assume Pin 6 (teensy++ LED) is available via a 1K pullup
+  for (int i = 0; i < NUM_FINGERS * 2; i++) {
+    buttons[i] = Bounce();
+    buttons[i].attach(i);
+    buttons[i].interval(5);
+    pinMode(i, INPUT_PULLUP);
   }
 
   // this allocation is never freed
   history_GLOBAL = newHistoryA();
 
-  setupLayout();
+  setupLayoutUEB();
 }
 
 
@@ -464,6 +566,11 @@ void loop() {
   ClockReturn *r = clock(current, h, LAYOUT); // + 1 Output
 
   deleteSnapshotD(current);
+
+  if(r->outputM->count > 0)
+  {
+   // iDebugOut(r->outputM->count);
+  }
 
   modifier_GLOBAL = sendOutputIO(r->outputM, modifier_GLOBAL);
 
