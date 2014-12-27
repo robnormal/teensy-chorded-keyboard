@@ -4,15 +4,16 @@
 #include "chorded_kbd_lib.h"
 
 const integer SWITCHES[NUM_FINGERS][2] = {
+  { THUMB_L, THUMB_H   },
   { INDEX_L,  INDEX_H  }, 
   { MIDDLE_L, MIDDLE_H },
   { RING_L,   RING_H   },
   { PINKY_L,  PINKY_H  }
 };
-const integer NUM_SWITCHES[NUM_FINGERS] = {2, 2, 2, 2}; 
+const integer NUM_SWITCHES[NUM_FINGERS] = {2, 2, 2, 2, 2}; 
 
 // chordite has 2 switches per finger, plus pressing _both_, which counts separately, as does pressing _nothing_
-const integer NUM_STATES[NUM_FINGERS] = {4, 4, 4, 4}; 
+const integer NUM_STATES[NUM_FINGERS] = {4, 4, 4, 4, 4}; 
 
 /** END **/
 
@@ -137,7 +138,6 @@ boole historyIsEmpty(const SwitchHistory *h)
 boole isRelease(const Snapshot s)
 {
   integer i;
-
   for (i = 0; i < NUM_FINGERS; ++i) {
     if (s[i] > 0) {
       return FALSE;
@@ -299,6 +299,11 @@ boole justModifier(Key *k)
 
 ClockReturn *clock(Snapshot currentM, SwitchHistory *history, Layout *l)
 {
+  int n;
+/*  for (n = 0; n < NUM_FINGERS; ++n) {
+    iDebugOut(currentM[n]);
+  } strDebugOut("");*/
+  
   Output        *oM    = outputForM(currentM, history, l);
   SwitchHistory *new_h = addToHistory(currentM, history);
 
@@ -467,7 +472,7 @@ Snapshot readInputsAIO()
 
     for (j = 0; j < NUM_SWITCHES[i]; ++j) {
       // shift by 1, put new bit at end
-      state = state*2 + readPinIO(SWITCHES[i][j]);
+      state = state*2 + readPinIO(SWITCHES[i][j]);      
     }
 
     s[i] = state;
@@ -478,7 +483,10 @@ Snapshot readInputsAIO()
 
 integer sendOutputIO(const Output *oM, integer modifier)
 {
+  char *msg = "in sendOutputIO";
+    
   if (oM && oM->count) {
+//sstrDebugOut(msg);
     integer i, end = oM->count;
     Key *kM;
 

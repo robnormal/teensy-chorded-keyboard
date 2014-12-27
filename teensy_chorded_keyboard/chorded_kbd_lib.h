@@ -16,7 +16,7 @@
 /** KEYBOARD-SPECIFIC CONFIGURATION **/
 
 #define LAYOUT_SIZE 61
-#define NUM_FINGERS 4
+#define NUM_FINGERS 5
 
 #define PINKY_L 0
 #define PINKY_H 1
@@ -26,11 +26,13 @@
 #define MIDDLE_H 5
 #define INDEX_L 6
 #define INDEX_H 7
+#define THUMB_L 8
+#define THUMB_H 9
 
 #define LEFT_HANDED TRUE
 
-#define UP LOW
-#define DOWN HIGH
+#define UP HIGH
+#define DOWN LOW
 
 /** END **/
 
@@ -48,6 +50,8 @@
 
 #define TRUE 1
 #define FALSE 0
+
+#define PULLUP 1
 
 typedef unsigned char boole;
 typedef unsigned char integer;
@@ -144,6 +148,8 @@ integer           modifier_GLOBAL; // context modifier - can be left over from l
  * source file for these to work
  */
 void handleOutOfMemory ();
+void iDebugOut          (int msg);
+void strDebugOut          (char *msg);
 void sendKeyIO         (const Key *k);
 integer  readPinIO     (integer pin);
 Key  *charToKeyA       (const char c);
